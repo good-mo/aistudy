@@ -565,7 +565,7 @@ async def add_local_config(request: Request):
         return JSONResponse({"code": 401, "message": "未登录", "data": None}, status_code=401)
 
     body = await request.json()
-    user_url = body.get("user_url", "")
+    user_url = body.get("user_url", body.get("userUrl", ""))
     cfg_type = body.get("type", "API")
     config = auth_store.add_local_config(user["id"], user_url, cfg_type)
     return JSONResponse({"code": 200, "message": "success", "data": config})
@@ -576,7 +576,7 @@ async def update_local_config(request: Request):
     """更新本地执行配置。"""
     body = await request.json()
     cfg_id = body.get("id", "")
-    user_url = body.get("user_url", "")
+    user_url = body.get("user_url", body.get("userUrl", ""))
     auth_store.update_local_config(cfg_id, user_url)
     return JSONResponse({"code": 200, "message": "success", "data": None})
 
@@ -686,7 +686,11 @@ async def system_user_page(request: Request):
                  or keyword.lower() in u.get("email", "").lower()]
     total = len(users)
     start = (current - 1) * pageSize
-    items = users[start:start + pageSize]
+    items = []
+    for user in users[start:start + pageSize]:
+        user.setdefault("organizationList", [])
+        user.setdefault("userRoleList", [])
+        items.append(user)
     return JSONResponse({
         "code": 200,
         "message": "success",
@@ -719,8 +723,42 @@ async def system_user_get(request: Request, id: str = "", username: str = "", ke
 async def add_user(request: Request):
     """添加用户。"""
     body = await request.json()
+    user_info_list = body.get("userInfoList")
+    if isinstance(user_info_list, list):
+        error_emails = {}
+        for item in user_info_list:
+            email = item.get("email", "")
+            username = item.get("username", email)
+            password = rsa_decrypt(item.get("password", "")) or email
+            if not email or not username or not password:
+                continue
+            if auth_store.get_user_by_username(username):
+                error_emails[email] = "用户名已存在"
+                continue
+            auth_store.create_user(
+                username=username,
+                password=password,
+                name=item.get("name", username),
+                email=email,
+                phone=item.get("phone", ""),
+                role=item.get("role", "user"),
+            )
+        return JSONResponse({
+            "code": 200,
+            "message": "success",
+            "data": {
+                "errorEmails": error_emails or None,
+                "successList": [
+                    item.get("email", "")
+                    for item in user_info_list
+                    if item.get("email", "") not in error_emails
+                ],
+            },
+        })
+
     username = body.get("username", "")
-    password = rsa_decrypt(body.get("password", ""))
+    email = body.get("email", "")
+    password = rsa_decrypt(body.get("password", "")) or email
     if not username or not password:
         return JSONResponse({"code": 400, "message": "用户名和密码不能为空", "data": None}, status_code=400)
 
@@ -731,7 +769,7 @@ async def add_user(request: Request):
         username=username,
         password=password,
         name=body.get("name", username),
-        email=body.get("email", ""),
+        email=email,
         phone=body.get("phone", ""),
         role=body.get("role", "user"),
     )
@@ -772,12 +810,15 @@ async def delete_user(request: Request):
 async def toggle_user_enabled(request: Request):
     """启用/禁用用户。"""
     body = await request.json()
-    user_id = body.get("id", "")
+    user_ids = body.get("selectIds") or [body.get("id", "")]
     enable = body.get("enable", body.get("status", "enable") == "enable")
-    ok = auth_store.set_user_enabled(user_id, bool(enable))
-    if not ok:
+    updated = sum(
+        1 for user_id in user_ids
+        if user_id and auth_store.set_user_enabled(user_id, bool(enable))
+    )
+    if updated == 0:
         return JSONResponse({"code": 404, "message": "用户不存在", "data": None}, status_code=404)
-    return JSONResponse({"code": 200, "message": "success", "data": None})
+    return JSONResponse({"code": 200, "message": "success", "data": {"updated": updated}})
 
 
 @router.post("/system/user/reset/password")
@@ -813,7 +854,7 @@ async def import_users(request: Request):
     created = 0
     for u in users:
         username = u.get("username", "")
-        password = rsa_decrypt(u.get("password", "")) or "123456"
+        password = rsa_decrypt(u.get("password", "")) or u.get("email", "")
         if not username or auth_store.get_user_by_username(username):
             continue
         auth_store.create_user(
@@ -829,8 +870,8 @@ async def import_users(request: Request):
 async def get_system_roles():
     """获取全局系统角色。"""
     return JSONResponse({"code": 200, "message": "success", "data": [
-        {"id": "admin", "name": "系统管理员"},
-        {"id": "user", "name": "普通用户"},
+        {"id": "admin", "name": "系统管理员", "selected": False, "closeable": False},
+        {"id": "user", "name": "普通用户", "selected": False, "closeable": True},
     ]})
 
 

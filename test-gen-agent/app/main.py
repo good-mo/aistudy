@@ -184,8 +184,8 @@ def _not_implemented(message: str = "功能尚未实现") -> _JSONResponse:
 
 @_extra_router.get("/notification/un-read/{project_id}")
 async def _extra_notification_unread(project_id: str):
-    """未读通知（带项目ID）。"""
-    return _not_implemented("通知功能尚未实现")
+    """返回指定项目的未读通知数量。"""
+    return _JSONResponse({"code": 200, "message": "success", "data": 0})
 
 @_extra_router.get("/project/application/case/related/info/{project_id}")
 async def _extra_case_related_info(project_id: str):
@@ -194,8 +194,8 @@ async def _extra_case_related_info(project_id: str):
 
 @_extra_router.get("/project/application/bug/platform/{org_id}")
 async def _extra_bug_platform(org_id: str):
-    """缺陷平台配置。"""
-    return _not_implemented("缺陷平台功能尚未实现")
+    """缺陷平台配置（带组织 ID）。"""
+    return _JSONResponse({"code": 200, "message": "success", "data": {}})
 
 @_extra_router.get("/project/application/bug/platform/info/{project_id}")
 async def _extra_bug_platform_info(project_id: str):

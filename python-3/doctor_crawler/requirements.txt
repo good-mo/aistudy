@@ -1,0 +1,12 @@
+# Web 抓取
+Scrapy>=2.11.0
+playwright>=1.40.0
+requests>=2.31.0
+
+# 解析
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+parse>=1.20.0
+
+# 数据处理
+jsonpath-ng>=1.6.0

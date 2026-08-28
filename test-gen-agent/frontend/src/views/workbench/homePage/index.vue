@@ -292,6 +292,7 @@
     for (let i = 0; i < queueList.length; i++) {
       const item = queueList[i];
       const [projectId] = item.projectIds;
+      if (!projectId) continue;
       if (!requestedIds.value.has(projectId)) {
         requestedIds.value.add(projectId);
         fetchProjectDetails(projectId);
@@ -304,7 +305,14 @@
       try {
         appStore.showLoading();
         const result = await getDashboardLayout(appStore.currentOrgId);
-        defaultWorkList.value = result;
+        const currentProjectId = appStore.currentProjectId;
+        defaultWorkList.value = (result || []).map((item) => ({
+          ...item,
+          projectIds: (() => {
+            const projectIds = item.projectIds?.filter((projectId) => projectId) || [];
+            return projectIds.length > 0 ? projectIds : currentProjectId ? [currentProjectId] : [];
+          })(),
+        }));
         requestQueue();
       } catch (error) {
         // eslint-disable-next-line no-console

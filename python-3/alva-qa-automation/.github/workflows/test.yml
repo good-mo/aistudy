@@ -1,0 +1,84 @@
+name: Alva QA Automation Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'alva-qa-automation/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'alva-qa-automation/**'
+  workflow_dispatch:
+
+jobs:
+  qa-tests:
+    name: Run QA Automation Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: alva-qa-automation
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: alva-qa-automation/package-lock.json
+
+      - name: Install dependencies
+        run: bash scripts/setup.sh
+
+      - name: Validate test data
+        run: bash scripts/validate-data.sh
+
+      - name: Run Playwright tests
+        run: npx playwright test --reporter=html,json
+        env:
+          CI: 'true'
+          # 默认指向 Alva 平台真实地址，可用 secret 覆盖
+          ALVA_BASE_URL: ${{ secrets.ALVA_BASE_URL || 'https://alva.ai/' }}
+
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-html-report
+          path: alva-qa-automation/reports/html/
+          retention-days: 14
+
+      - name: Upload JSON results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-json-results
+          path: alva-qa-automation/reports/json/
+          retention-days: 14
+
+      - name: Upload test screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-screenshots
+          path: alva-qa-automation/reports/screenshots/
+          retention-days: 14
+
+      - name: Upload test trace & videos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-trace-videos
+          path: alva-qa-automation/reports/screenshots/
+          retention-days: 14
+
+      - name: Upload QA logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-logs
+          path: alva-qa-automation/reports/logs/
+          retention-days: 14

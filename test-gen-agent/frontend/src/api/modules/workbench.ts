@@ -197,7 +197,7 @@ export function workScenarioCaseCountDetail(data: WorkHomePageDetail) {
 
 // 工作台-首页-缺陷处理人列表
 export function workHandleUserOptions(projectId: string) {
-  return MSR.get({ url: WorkHandleUserOptionsUrl, params: projectId }, { ignoreCancelToken: true });
+  return MSR.get({ url: WorkHandleUserOptionsUrl, params: { projectId } }, { ignoreCancelToken: true });
 }
 
 // 工作台-首页-测试计划遗留缺陷
@@ -207,7 +207,7 @@ export function workPlanLegacyBug(data: WorkHomePageDetail) {
 
 // 工作台-首页-接口测试覆盖率
 export function workApiCountCoverRage(projectId: string) {
-  return MSR.get<ApiCoverageData>({ url: WorkApiCountCoverRateUrl, params: projectId }, { ignoreCancelToken: true });
+  return MSR.get<ApiCoverageData>({ url: WorkApiCountCoverRateUrl, params: { projectId } }, { ignoreCancelToken: true });
 }
 // 工作台-首页-测试计划数量
 export function workTestPlanRage(data: WorkTestPlanDetail) {

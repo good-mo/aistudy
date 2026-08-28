@@ -76,13 +76,8 @@ export function queryMessageHistoryList(data: historyQueryParams) {
   return MSR.post<CommonList<MessageHistoryItem>>({ url: '/notification/list/all/page', data });
 }
 
-export interface OptionItem {
-  id: string;
-  name: string;
-}
-
 export function queryMessageHistoryCount(data: historyQueryParams) {
-  return MSR.post<OptionItem[]>({ url: '/notification/count', data });
+  return MSR.post<{ count: number }[]>({ url: '/notification/count', data });
 }
 
 export function getMessageReadAll(resourceType?: string) {
@@ -93,5 +88,5 @@ export function getMessageRead(id: number) {
 }
 
 export function getMessageUnReadCount(projectId: string) {
-  return MSR.get<number>({ url: '/notification/un-read', params: projectId }, { ignoreCancelToken: true });
+  return MSR.get<number>({ url: '/notification/un-read', params: { projectId } }, { ignoreCancelToken: true });
 }

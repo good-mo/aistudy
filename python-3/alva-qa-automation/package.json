@@ -1,0 +1,34 @@
+{
+  "name": "alva-qa-automation",
+  "version": "1.0.0",
+  "description": "Alva 金融分析平台端到端自动化测试框架 (Playwright + TypeScript)",
+  "private": true,
+  "scripts": {
+    "setup": "bash scripts/setup.sh",
+    "test": "bash scripts/run-tests.sh",
+    "test:headed": "playwright test --headed",
+    "test:report": "bash scripts/generate-report.sh",
+    "validate:data": "bash scripts/validate-data.sh",
+    "report": "playwright show-report reports/html",
+    "all": "bash run.sh"
+  },
+  "keywords": [
+    "playwright",
+    "qa",
+    "automation",
+    "e2e",
+    "financial"
+  ],
+  "author": "MOMO.MO",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.45.0",
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.0",
+    "ts-node": "^10.9.2"
+  },
+  "dependencies": {
+    "axios": "^1.7.0",
+    "winston": "^3.13.0"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "tickers": [
+    { "symbol": "AAPL", "name": "Apple Inc.", "exchange": "NASDAQ", "type": "stock" },
+    { "symbol": "MSFT", "name": "Microsoft Corp.", "exchange": "NASDAQ", "type": "stock" },
+    { "symbol": "GOOGL", "name": "Alphabet Inc.", "exchange": "NASDAQ", "type": "stock" },
+    { "symbol": "0700.HK", "name": "Tencent Holdings", "exchange": "HKEX", "type": "stock" },
+    { "symbol": "^GSPC", "name": "S&P 500 Index", "exchange": "INDEX", "type": "index" },
+    { "symbol": "000300.SS", "name": "CSI 300 Index", "exchange": "SSE", "type": "index" }
+  ]
+}

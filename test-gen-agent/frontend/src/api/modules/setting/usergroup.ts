@@ -55,7 +55,7 @@ export function deleteOrgUserGroup(id: string) {
 }
 
 export function getUsergroupInfo(id: string) {
-  return MSR.get<UserGroupItem>({ url: `${ugUrl.getUserGroupU}${id}` });
+  return MSR.get<UserGroupItem>({ url: `${ugUrl.getUsergroupInfoU}${id}` });
 }
 
 // 系统-获取用户组对应的权限配置

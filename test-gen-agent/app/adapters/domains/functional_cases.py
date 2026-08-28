@@ -123,14 +123,14 @@ async def functional_case_demand_page(request: Request):
 @router.post("/functional/case/custom/field/{project_id}")
 async def func_case_custom_field_path(project_id: str):
     """获取功能用例自定义字段（带路径参数）。"""
-    return _ok({"project_id": project_id})
+    return _ok([])
 
 
 @router.get("/functional/case/default/template/field/{project_id}")
 @router.post("/functional/case/default/template/field/{project_id}")
 async def func_case_default_template_field_path(project_id: str):
     """获取功能用例默认模板字段（带路径参数）。"""
-    return _ok({"project_id": project_id})
+    return _ok({"id": f"default-{project_id}", "customFields": []})
 
 
 @router.get("/functional/case/demand/cancel/{case_id}")

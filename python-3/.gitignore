@@ -1,0 +1,61 @@
+# ============================================================
+# Python
+# ============================================================
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# ============================================================
+# 运行产物 / 生成数据（可按需保留，默认忽略）
+# ============================================================
+# 理财/基金分析产物
+analysis_report.json
+analysis_ranking.csv
+coarse_screening_result.csv
+fund_screening_result.csv
+index_fund_professional*.csv
+hs300_analysis_*.csv
+spdb_analysis_*.csv
+out.csv
+out1.csv
+
+# 缓存与日志
+.cache/
+.data_cache/
+**/cache/
+*.log
+*.pyc
+logs/
+
+# alva-qa-automation 报告目录需保留（含 logs 子目录结构）
+!alva-qa-automation/reports/logs/
+!alva-qa-automation/reports/logs/.gitkeep
+
+# 报告输出
+jijin/reports/
+jijin/fund_records/
+
+# ============================================================
+# 敏感信息
+# ============================================================
+# 交易客户端配置含明文口令，不应入库
+stock/config/trade_client.json
+
+# ============================================================
+# 其他
+# ============================================================
+.idea/
+.vscode/
+.DS_Store
+# 爬虫数据输出
+**/data/
+# doctor_crawler 爬虫数据产物需入库
+!doctor_crawler/data/
+!doctor_crawler/data/doctor_scrapy.json
+!doctor_crawler/data/doctor_scrapy.csv

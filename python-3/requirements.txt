@@ -1,0 +1,35 @@
+# ============================================================
+# 项目依赖声明（Python 3.12）
+#
+# 按模块划分：
+#   - lc/wealth_product_analyzer.py  理财产品深度分析
+#   - jijin/                          基金筛选与追踪
+#   - share/ share300/                股票/沪深300 盯盘分析
+#   - stock/                          交易引擎（easytrader 为可选）
+#   - data/ api/                      数据抓取与 API 示例
+#
+# 安装：pip install -r requirements.txt
+# ============================================================
+
+# ---- 数据处理 ----
+numpy
+pandas
+
+# ---- 网络请求 ----
+requests
+beautifulsoup4
+
+# ---- 金融数据 ----
+akshare>=1.14.0
+talib
+
+# ---- 理财分析（lc/） ----
+gmssl
+scipy
+
+# ---- 交易引擎（stock/，可选） ----
+# easytrader
+# logbook
+
+# ---- API 示例（api/） ----
+# openai

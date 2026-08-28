@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Request, WebSocket
 from fastapi.responses import JSONResponse
 from app.core.response import ok, fail
+from app.auth.store import auth_store
 
 from app.logging_config import get_logger
 
@@ -389,9 +390,35 @@ async def organization_project_pool_options(org_id: str = ""):
 
 
 @router.get("/organization/member/list")
-async def organization_member_list(org_id: str = ""):
-    """组织成员列表。"""
-    return _ok([])
+@router.post("/organization/member/list")
+async def organization_member_list(request: Request, org_id: str = ""):
+    """组织成员列表，统一返回分页结构。"""
+    body = {}
+    if request.method == "POST":
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+    current = int(body.get("current", request.query_params.get("current", 1)))
+    page_size = int(body.get("pageSize", request.query_params.get("pageSize", 10)))
+    users = auth_store.list_users()
+    keyword = body.get("keyword", request.query_params.get("keyword", ""))
+    if keyword:
+        keyword = str(keyword).lower()
+        users = [
+            user for user in users
+            if keyword in user.get("username", "").lower()
+            or keyword in user.get("name", "").lower()
+            or keyword in user.get("email", "").lower()
+        ]
+    items = []
+    for user in users[(current - 1) * page_size:current * page_size]:
+        user.setdefault("projectIdNameMap", [])
+        user.setdefault("userRoleIdNameMap", [])
+        user.setdefault("selectUserList", [])
+        user.setdefault("selectProjectList", [])
+        items.append(user)
+    return _ok({"list": items, "total": len(users), "pageSize": page_size, "current": current})
 
 
 @router.post("/organization/add-member")
@@ -431,6 +458,12 @@ async def organization_user_invite(request: Request):
 @router.get("/organization/user/role/list")
 async def organization_user_role_list(org_id: str = ""):
     """组织用户角色列表。"""
+    return _ok([])
+
+
+@router.get("/organization/user/role/list/{org_id}")
+async def organization_user_role_list_path(org_id: str):
+    """组织用户角色列表（路径参数兼容）。"""
     return _ok([])
 
 

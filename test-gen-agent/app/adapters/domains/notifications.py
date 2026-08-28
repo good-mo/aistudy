@@ -71,7 +71,7 @@ async def api_message_list_post(request: Request):
 @router.post("/notification/count")
 async def notification_count_post(request: Request):
     """通知数量（POST兼容）。"""
-    return _ok({"count": 0})
+    return _ok([])
 
 
 @router.get("/notice/message/task/get")
@@ -112,9 +112,18 @@ async def notification_count():
 
 
 @router.get("/notification/list/all/page")
-async def notification_list_all_page():
+@router.post("/notification/list/all/page")
+async def notification_list_all_page(request: Request):
     """通知分页列表。"""
-    return _ok(_paginate([], 1, 10))
+    body = {}
+    if request.method == "POST":
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+    current = int(body.get("current", 1))
+    page_size = int(body.get("pageSize", 10))
+    return _ok(_paginate([], current, page_size))
 
 
 @router.post("/notification/read/all")
@@ -127,7 +136,7 @@ async def notification_read_all(request: Request):
 @router.get("/notification/un-read")
 async def notification_un_read():
     """未读通知。"""
-    return _ok([])
+    return _ok(0)
 
 
 @router.get("/api/message/list")

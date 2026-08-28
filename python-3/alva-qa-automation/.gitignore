@@ -1,0 +1,39 @@
+# 忽略 node_modules 与测试产物
+
+# 依赖
+node_modules/
+
+# Playwright 测试产物（运行时生成，但保留 reports 目录结构）
+test-results/
+playwright-report/
+reports/html/*.html
+reports/html/data/
+reports/html/trace/
+reports/json/*.json
+reports/screenshots/*
+reports/logs/*.log
+reports/summary.txt
+
+# 保留 reports 目录结构与 .gitkeep
+!reports/html/.gitkeep
+!reports/json/.gitkeep
+!reports/screenshots/.gitkeep
+!reports/logs/.gitkeep
+
+# 运行产物归档（关键截图/日志/摘要，留存入库）
+!reports/archive/
+!reports/archive/**
+!reports/archive/screenshots/*.png
+!reports/archive/logs/*.log
+!reports/archive/summary.txt
+
+# 环境变量
+.env
+.env.local
+
+# TypeScript 编译产物
+dist/
+
+# 日志（archive 目录除外，见上方豁免）
+*.log
+!reports/archive/logs/*.log

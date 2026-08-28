@@ -15,6 +15,14 @@ AUTH_PUBLIC_PATHS = {
     "/authentication/get-list": {"GET"},
     "/authentication/get/by/type": {"GET"},
     "/api/user/menu": {"POST"},
+    "/user/local/config/default-locale": {"GET"},
+    "/system/version/current": {"GET"},
+    "/system/version/package-type": {"GET"},
+    "/setting/get/platform/param": {"GET"},
+    "/base-display/get/logo-platform": {"GET"},
+    "/base-display/get/login-logo": {"GET"},
+    "/base-display/get/login-image": {"GET"},
+    "/base-display/get/icon": {"GET"},
     "/health": {"GET", "HEAD"},
 }
 

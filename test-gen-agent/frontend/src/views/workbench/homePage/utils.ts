@@ -677,8 +677,8 @@ export function handleUpdateTabPie(
       ? [emptyData]
       : lastCountList.filter((e) => e.value !== 0);
 
-    options.title.text = countList[0].name ?? '';
-    options.title.subtext = `${countList[0].count ?? 0}%`;
+    options.title.text = countList[0]?.name ?? '';
+    options.title.subtext = `${countList[0]?.count ?? 0}%`;
   } else {
     options.series.data = [emptyData];
 

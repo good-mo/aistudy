@@ -810,7 +810,8 @@ async def dashboard_header_columns_option(project_id: str):
 
 # ── 接口覆盖率 ───────────────────────────────────────────
 @dashboard_router.get("/api/definition/rage")
-async def dashboard_api_coverage():
+@dashboard_router.get("/api/definition/rage/{project_id}")
+async def dashboard_api_coverage(project_id: str = ""):
     """接口覆盖率统计。"""
     from app.apitest.store import list_definitions, list_api_cases, list_scenarios
 

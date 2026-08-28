@@ -1,0 +1,31 @@
+{
+  "assets": [
+    {
+      "symbol": "AAPL",
+      "name": "Apple Inc.",
+      "price": 210.15,
+      "volume": 52000000,
+      "marketCap": 3200000000000,
+      "peRatio": 35.2,
+      "tolerance": 0.05
+    },
+    {
+      "symbol": "MSFT",
+      "name": "Microsoft Corp.",
+      "price": 440.2,
+      "volume": 22000000,
+      "marketCap": 3270000000000,
+      "peRatio": 36.5,
+      "tolerance": 0.05
+    },
+    {
+      "symbol": "^GSPC",
+      "name": "S&P 500 Index",
+      "price": 5600.5,
+      "volume": 0,
+      "marketCap": null,
+      "peRatio": 26.1,
+      "tolerance": 0.05
+    }
+  ]
+}

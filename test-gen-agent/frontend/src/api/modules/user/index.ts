@@ -160,12 +160,12 @@ export function getLocalConfig() {
 
 // 个人设置-启用本地执行配置
 export function enableLocalConfig(id: string) {
-  return MSR.get({ url: EnableLocalConfigUrl, params: id });
+  return MSR.get({ url: EnableLocalConfigUrl, params: { id } });
 }
 
 // 个人设置-禁用本地执行配置
 export function disableLocalConfig(id: string) {
-  return MSR.get({ url: DisableLocalConfigUrl, params: id });
+  return MSR.get({ url: DisableLocalConfigUrl, params: { id } });
 }
 
 // 个人设置-修改 APIKEY
@@ -185,12 +185,12 @@ export function getAPIKEYList() {
 
 // 个人设置-开启 APIKEY
 export function enableAPIKEY(id: string) {
-  return MSR.get({ url: EnableAPIKEYUrl, params: id });
+  return MSR.post({ url: EnableAPIKEYUrl, data: { id } });
 }
 
 // 个人设置-关闭 APIKEY
 export function disableAPIKEY(id: string) {
-  return MSR.get({ url: DisableAPIKEYUrl, params: id });
+  return MSR.post({ url: DisableAPIKEYUrl, data: { id } });
 }
 
 // 个人设置-删除 APIKEY
