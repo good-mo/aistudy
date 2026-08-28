@@ -1,0 +1,28 @@
+# ════════════════════════════════════════════════════════════════
+# 后端调试镜像（配合 docker-compose.yml 使用）
+# 仅安装 Python 依赖，源码通过 volume 挂载，支持 uvicorn --reload
+# ════════════════════════════════════════════════════════════════
+FROM python:3.12
+
+# 指定字符集支持命令行输入中文
+ENV LANG=C.UTF-8
+ENV LANGUAGE=C.UTF-8
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# 先复制依赖清单并安装（利用 Docker 层缓存）
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 运行时会通过 docker-compose 挂载源码到此目录
+# （此处仅为占位，避免容器缺目录）
+COPY app/ ./app/
+COPY templates/ ./templates/
+COPY static/ ./static/
+COPY scripts/ ./scripts/
+
+EXPOSE 8000
+
+# 默认命令；docker-compose 中会覆盖为 --reload 调试模式
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

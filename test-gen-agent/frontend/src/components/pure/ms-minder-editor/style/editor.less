@@ -1,0 +1,64 @@
+@import url('@7polo/kityminder-core/dist/kityminder.core.css');
+.km-editor {
+  @apply overflow-hidden;
+
+  z-index: 2;
+}
+.km-editor > .mask {
+  @apply absolute bottom-0 left-0 right-0 top-0 block bg-transparent;
+}
+.km-editor > .receiver {
+  @apply pointer-events-none absolute left-0 top-0 box-border w-auto select-text overflow-hidden break-words break-all border-none opacity-0 outline-none;
+
+  z-index: -1000;
+  margin-top: -5px;
+  margin-left: -3px;
+  padding: 3px 5px;
+  max-width: 300px;
+  min-height: 1.4em;
+  font-size: 14px;
+  background-color: var(--color-text-fff);
+  box-shadow: 0 0 20px;
+  line-height: 1.4em;
+  &.debug {
+    @apply z-0 bg-none opacity-100;
+
+    outline: 1px solid green;
+  }
+  &.input {
+    @apply opacity-100 outline-none;
+
+    z-index: 999;
+    background-color: var(--color-text-fff);
+    pointer-events: all;
+  }
+}
+div.minder-editor-container {
+  @apply absolute bottom-0 left-0 right-0;
+
+  top: 40px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+.minder-editor {
+  @apply absolute bottom-0 left-0 right-0;
+
+  top: 92px;
+}
+.minder-viewer {
+  @apply absolute bottom-0 left-0 right-0 top-0;
+}
+.control-panel {
+  @apply absolute bottom-0 right-0 top-0;
+
+  width: 250px;
+  border-left: 1px solid #cccccc;
+}
+.minder-divider {
+  @apply absolute bottom-0 top-0 cursor-ew-resize;
+
+  right: 250px;
+  width: 2px;
+  background-color: rgb(251 251 251);
+}

@@ -1,0 +1,244 @@
+@import url('./arco-reset.less');
+@import url('@/components/business/ms-comment/style.less');
+:root {
+  --border-radius-mini: 2px;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+* {
+  @apply box-border;
+}
+html,
+body {
+  @apply m-0 h-full w-full p-0;
+
+  font-size: 14px;
+  font-family: 'Helvetica Neue', Arial, 'PingFang SC', 'Source Han Serif' !important;
+  color: var(--color-text-1);
+  background-color: var(--color-bg-1);
+  line-height: 22px;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+}
+.echarts-tooltip-diy {
+  @apply !border-none;
+
+  /* Note: backdrop-filter has minimal browser support */
+
+  border-radius: 6px !important;
+  background: linear-gradient(304.17deg, rgb(253 254 255 / 60%) -6.04%, rgb(244 247 252 / 60%) 85.2%) !important;
+  backdrop-filter: blur(10px) !important;
+  .content-panel {
+    @apply flex justify-between;
+
+    margin-bottom: 4px;
+    padding: 0 9px;
+    width: 164px;
+    height: 32px;
+    border-radius: 4px;
+    background: rgb(255 255 255 / 80%);
+    box-shadow: 6px 0 20px rgb(34 87 188 / 10%);
+    line-height: 32px;
+  }
+  .tooltip-title {
+    margin: 0 0 10px;
+  }
+  p {
+    @apply m-0;
+  }
+  .tooltip-title,
+  .tooltip-value {
+    @apply flex items-center text-right font-bold;
+
+    font-size: 13px;
+    color: #1d2129;
+    line-height: 15px;
+  }
+  .tooltip-item-icon {
+    @apply inline-block;
+
+    margin-right: 8px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+}
+.general-card {
+  @apply border-none;
+
+  border-radius: 4px;
+  & > .arco-card-header {
+    @apply h-auto border-none;
+
+    padding: 20px;
+  }
+  & > .arco-card-body {
+    padding: 0 20px 20px;
+  }
+}
+.split-line {
+  border-color: rgb(var(--gray-2));
+}
+.sub-text {
+  font-size: 12px;
+  color: rgb(var(--color-text-4));
+  line-height: 16px;
+}
+
+/* 单航文本缩略 */
+.one-line-text {
+  @apply overflow-hidden overflow-ellipsis whitespace-nowrap;
+}
+
+/* 修改进度条的背景颜色 */
+#nprogress {
+  .bar {
+    background: rgb(var(--primary-6));
+  }
+}
+
+/* 白色背景的tooltip */
+.ms-tooltip-white {
+  .arco-tooltip-content {
+    background-color: var(--color-bg-1);
+    box-shadow: 0 4px 10px -1px rgb(100 100 102 / 15%);
+  }
+  .arco-tooltip-popup-arrow {
+    z-index: 1;
+    background-color: var(--color-bg-1);
+  }
+}
+
+/* 红色背景的tooltip */
+.ms-tooltip-red {
+  .arco-tooltip-content {
+    color: rgb(var(--danger-6));
+    background-color: rgb(var(--danger-1));
+    box-shadow: 0 4px 10px -1px rgb(100 100 102 / 15%);
+  }
+  .arco-tooltip-popup-arrow {
+    z-index: 1;
+    background-color: rgb(var(--danger-1));
+  }
+}
+
+/* 参数输入框 popover */
+.ms-params-input-popover {
+  .arco-trigger-popup-wrapper {
+    .arco-popover-popup-content {
+      padding: 4px 8px;
+      border-color: var(--color-text-n8);
+    }
+  }
+
+  max-width: 400px;
+}
+.ms-params-popover-title {
+  @apply font-medium;
+
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  color: var(--color-text-1);
+}
+.ms-params-popover-subtitle {
+  margin-bottom: 2px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--color-text-1);
+}
+.ms-params-popover-value {
+  @apply overflow-y-auto;
+  .ms-scroll-bar();
+
+  min-width: 100px;
+  max-width: 280px;
+  max-height: 300px;
+  font-size: 12px;
+  color: var(--color-text-1);
+  line-height: 16px;
+}
+
+/* 表格必填按钮 button */
+.ms-form-table-required-button {
+  @apply flex cursor-pointer items-center justify-center align-middle;
+
+  margin-right: 4px;
+  padding: 0 8px;
+  height: 24px;
+  font-size: 12px;
+  border: 1px solid var(--color-text-n8);
+  border-radius: var(--border-radius-small);
+  color: var(--color-text-brand);
+  &:hover:not(.ms-form-table-required-button--required, .ms-form-table-required-button--disabled) {
+    color: rgb(var(--primary-7));
+  }
+  &--required {
+    color: rgb(var(--danger-5)) !important;
+  }
+  &--disabled {
+    @apply cursor-not-allowed;
+  }
+}
+
+/* 报告气泡样式 */
+.report-popover-content {
+  padding: 16px;
+  .arco-popover-content {
+    @apply mt-0;
+  }
+}
+
+/** 更多按钮 **/
+.ms-more-action-trigger-content {
+  @apply flex items-center;
+  .more-icon-btn {
+    padding: 2px;
+    border-radius: var(--border-radius-mini);
+    &:hover {
+      background-color: rgb(var(--primary-9)) !important;
+      .arco-icon {
+        color: rgb(var(--primary-5)) !important;
+      }
+    }
+  }
+}
+.ms-more-action-trigger-content--focus {
+  .more-icon-btn {
+    @apply !visible;
+
+    background-color: rgb(var(--primary-9));
+    .arco-icon {
+      color: rgb(var(--primary-5));
+    }
+  }
+}
+
+// 表格选中行样式
+.selected-row-class.arco-table-tr {
+  background: var(--color-fill-1) !important;
+  .arco-table-td {
+    background: var(--color-fill-1) !important;
+  }
+}
+
+/** 无权限明亮样式 **/
+.no-permission-svg-bright {
+  margin: 0 auto;
+  width: 160px;
+  height: 90px;
+  background: url('@/assets/svg/no_resource.svg');
+  background-size: cover;
+}
+
+/** 无权限暗黑样式 **/
+.no-permission-svg-dark {
+  margin: 0 auto;
+  width: 160px;
+  height: 90px;
+  background: url('@/assets/svg/no_resource-dark.svg');
+  background-size: cover;
+}

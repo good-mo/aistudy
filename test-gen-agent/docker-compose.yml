@@ -1,0 +1,71 @@
+# ══════════════════════════════════════════════════════════════════════
+# 前后端本地调试 docker-compose
+# ----------------------------------------------------------------
+# 用法：
+#   1. 复制环境变量：  cp .env.example .env   （并填入 OPENAI_API_KEY）
+#   2. 首次构建启动：  docker compose up --build -d
+#   3. 查看日志：      docker compose logs -f
+#   4. 停止：          docker compose down
+#
+# 访问地址：
+#   前端 (Vite dev server + HMR)： http://localhost:5173
+#   后端 (FastAPI 文档)：          http://localhost:8000/docs
+#
+# 源码以 volume 方式挂载进容器，无需重建镜像即可调试：
+#   - 修改后端 app/ 下代码 → uvicorn --reload 自动重启
+#   - 修改前端 frontend/src 下代码 → Vite HMR 热更新
+# ══════════════════════════════════════════════════════════════════════
+
+services:
+  # ---------- FastAPI 后端 ----------
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: tg-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      # 将整个项目根目录挂载到 /app，源码改动即时生效（uvicorn --reload）
+      # SQLite 数据库（*.db）等运行时文件也会落到宿主机项目根，便于持久化
+      - .:/app
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8000
+      ENVIRONMENT: development
+      DEBUG: "true"
+      # 本地调试时不启用 Docker 沙箱，避免 Docker-in-Docker 嵌套
+      # 如需沙箱隔离请改为 "true"
+      SANDBOX_ENABLED: "false"
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    working_dir: /app
+    restart: unless-stopped
+
+  # ---------- Vue3 前端 (Vite dev server + HMR) ----------
+  frontend:
+    image: node:20-bullseye
+    container_name: tg-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      # 挂载前端源码，实现 HMR 热更新
+      - ./frontend:/app
+      # node_modules 用命名卷缓存，避免每次启动重装依赖
+      - frontend_node_modules:/app/node_modules
+    environment:
+      # 容器内通过服务名访问后端（覆盖 .env.development 中的 localhost）
+      VITE_DEV_DOMAIN: http://backend:8000/
+      VITE_API_BASE_URL: front
+    command: >
+      sh -c "npm install --legacy-peer-deps --no-audit --no-fund
+      && npm run dev -- --host 0.0.0.0 --port 5173"
+    working_dir: /app
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  frontend_node_modules:

@@ -1,0 +1,115 @@
+export enum WorkOverviewIconEnum {
+  FUNCTIONAL = 'icon-icon_functional_testing1',
+  CASE_REVIEW = 'icon-icon_people',
+  API = 'icon-icon_api',
+  API_CASE = 'icon-icon_case',
+  API_SCENARIO = 'icon-icon_environment',
+  TEST_PLAN = 'icon-icon_calendar_dot',
+  BUG_COUNT = 'icon-icon_bug',
+}
+
+export enum WorkOverviewEnum {
+  FUNCTIONAL = 'FUNCTIONAL', // 功能用例
+  CASE_REVIEW = 'CASE_REVIEW', // 用例评审
+  API = 'API',
+  API_CASE = 'API_CASE',
+  API_SCENARIO = 'API_SCENARIO',
+  TEST_PLAN = 'TEST_PLAN', // 测试计划
+  BUG_COUNT = 'BUG_COUNT', // 缺陷数量
+}
+
+export enum WorkCardEnum {
+  /**
+   * default
+   */
+  CREATE_BY_ME = 'CREATE_BY_ME', // 我创建的
+  PROJECT_VIEW = 'PROJECT_VIEW', // 项目概览
+  PROJECT_MEMBER_VIEW = 'PROJECT_MEMBER_VIEW', // 项目成员概览
+  PROJECT_PLAN_VIEW = 'PROJECT_PLAN_VIEW', // 测试计划概览
+
+  /**
+   * functional
+   */
+  CASE_COUNT = 'CASE_COUNT', // 用例数量统计
+  ASSOCIATE_CASE_COUNT = 'ASSOCIATE_CASE_COUNT', // 关联用例统计
+  REVIEW_CASE_COUNT = 'REVIEW_CASE_COUNT', // 用例评审数量统计
+  REVIEWING_BY_ME = 'REVIEWING_BY_ME', // 待我评审
+
+  /**
+   * api
+   */
+  API_COUNT = 'API_COUNT', // 接口数量统计
+  API_CASE_COUNT = 'API_CASE_COUNT', // 接口用例数量统计
+  SCENARIO_COUNT = 'SCENARIO_COUNT', // 场景用例数量统计
+  API_CHANGE = 'API_CHANGE', // 接口变更统计
+
+  /**
+   * test_plan
+   */
+  TEST_PLAN_COUNT = 'TEST_PLAN_COUNT', // 测试计划数量统计
+  PLAN_LEGACY_BUG = 'PLAN_LEGACY_BUG', // 计划遗留bug统计
+
+  /**
+   * bug
+   */
+  BUG_COUNT = 'BUG_COUNT', // 缺陷数量统计
+  CREATE_BUG_BY_ME = 'CREATE_BUG_BY_ME', // 我创建的缺陷
+  HANDLE_BUG_BY_ME = 'HANDLE_BUG_BY_ME', // 待我处理的缺陷
+  BUG_HANDLE_USER = 'BUG_HANDLE_USER', // 缺陷处理人统计
+}
+
+export enum FeatureEnum {
+  TEST_PLAN = 'TEST_PLAN',
+  TEST_CASE = 'TEST_CASE',
+  CASE_REVIEW = 'CASE_REVIEW',
+  API_CASE = 'API_CASE',
+  API_SCENARIO = 'API_SCENARIO',
+  BUG = 'BUG',
+}
+// 工作台跳转KEY
+export enum WorkNavValueEnum {
+  CASE_REVIEWED = 'CASE_REVIEWED', //  有评审结果
+  CASE_UN_REVIEWED = 'CASE_UN_REVIEWED', // 没有评审结果
+  CASE_REVIEWED_PASS = 'CASE_REVIEWED_PASS', // // 评审通过
+  CASE_REVIEWED_UN_PASS = 'CASE_REVIEWED_UN_PASS', // 评审不通过
+  CASE_ASSOCIATED = 'CASE_ASSOCIATED', // 已关联用例
+  CASE_NOT_ASSOCIATED = 'CASE_NOT_ASSOCIATED', // 没有关联用例
+  API_COUNT_DONE = 'API_COUNT_DONE', // 接口数已完成
+  API_COUNT_PROCESSING = 'API_COUNT_PROCESSING', // 接口数进行中
+  API_COUNT_DEBUGGING = 'API_COUNT_DEBUGGING', // 接口数联调中
+  API_COUNT_DEPRECATED = 'API_COUNT_DEPRECATED', // 接口数已废弃
+  API_COUNT_EXECUTE_FAKE_ERROR = 'API_COUNT_EXECUTE_FAKE_ERROR', // 接口用例执行结果误报
+  API_COUNT_EXECUTE_SUCCESS = 'API_COUNT_EXECUTE_SUCCESS', // 接口用例执行结果已通过
+  API_COUNT_EXECUTE_ERROR = 'API_COUNT_EXECUTE_ERROR', // 接口用例执行结果失败
+  API_COUNT_EXECUTED_RESULT = 'API_COUNT_EXECUTED_RESULT', // 接口用例-有执行结果
+  API_COUNT_EXECUTED_NOT_RESULT = 'API_COUNT_EXECUTED_NOT_RESULT', // 接口用例-无执行结果
+  API_COUNT_COVER = 'API_COUNT_COVER', // 接口数-覆盖
+  API_COUNT_UN_COVER = 'API_COUNT_UN_COVER', // 接口数-未覆盖
+  API_CASE_COUNT_COVER = 'API_CASE_COUNT_COVER', // 接口-用例-覆盖
+  API_CASE_COUNT_UN_COVER = 'API_CASE_COUNT_UN_COVER', // 接口数-用例-未覆盖
+  SCENARIO_COVER = 'SCENARIO_COVER', // 接口数-用例-未覆盖
+  SCENARIO_UN_COVER = 'SCENARIO_UN_COVER', // 接口数-用例-未覆盖
+
+  SCENARIO_COUNT_EXECUTE_FAKE_ERROR = 'SCENARIO_COUNT_EXECUTE_FAKE_ERROR', // 场景用例执行结果误报
+  SCENARIO_COUNT_EXECUTE_SUCCESS = 'SCENARIO_COUNT_EXECUTE_SUCCESS', // 场景用例执行结果已通过
+  SCENARIO_COUNT_EXECUTE_ERROR = 'SCENARIO_COUNT_EXECUTE_ERROR', // 场景用例执行结果失败
+  SCENARIO_COUNT_EXECUTED_RESULT = 'SCENARIO_COUNT_EXECUTED_RESULT', // 场景用例-有执行结果
+  SCENARIO_COUNT_EXECUTED_NOT_RESULT = 'SCENARIO_COUNT_EXECUTED_NOT_RESULT', // 场景用例-无执行结果
+  TEST_PLAN_COMPLETED = 'TEST_PLAN_COMPLETED', // 测试计划-已完成
+  TEST_PLAN_UNDERWAY = 'TEST_PLAN_UNDERWAY', // 测试计划-进行中
+  TEST_PLAN_PREPARED = 'TEST_PLAN_PREPARED', // 测试计划-未开始
+  TEST_PLAN_ARCHIVED = 'TEST_PLAN_ARCHIVED', // 测试计划-已归档
+  TEST_PLAN_PASSED = 'TEST_PLAN_PASSED', // 测试计划已通过
+  TEST_PLAN_NOT_PASS = 'TEST_PLAN_NOT_PASS', // 测试计划未通过通过
+  TEST_PLAN_NOT_PASS_ARCHIVED = 'TEST_PLAN_NOT_PASS_ARCHIVED', // 测试计划未通过已归档
+  TEST_PLAN_PASSED_ARCHIVED = 'TEST_PLAN_PASSED_ARCHIVED', // 测试计划已通过已归档
+
+  TEST_PLAN_BUG = 'TEST_PLAN_BUG', // 测试计划总缺陷
+  TEST_PLAN_LEGACY = 'TEST_PLAN_LEGACY', // 测试计划遗留缺陷
+  BUG_COUNT = 'BUG_COUNT', // 缺陷总数
+  BUG_COUNT_LEGACY = 'BUG_COUNT_LEGACY', // 缺陷遗留总数
+  BUG_COUNT_BY_ME = 'BUG_COUNT_BY_ME', // 我创建的缺陷总数
+  BUG_COUNT_BY_ME_LEGACY = 'BUG_COUNT_BY_ME_LEGACY', // 我创建的遗留缺陷总数
+  BUG_HANDLE_BY_ME = 'BUG_HANDLE_BY_ME', // 待我处理的遗留缺陷总数
+  BUG_HANDLE_BY_ME_LEGACY = 'BUG_HANDLE_BY_ME_LEGACY', // 待我处理的遗留缺陷总数
+}

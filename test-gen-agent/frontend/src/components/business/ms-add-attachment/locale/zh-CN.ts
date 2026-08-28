@@ -1,0 +1,16 @@
+export default {
+  'ms.add.attachment.localUpload': '本地上传',
+  'ms.add.attachment.associateFile': '关联文件',
+  'ms.add.attachment.alreadyDelete': '已被删除文件',
+  'ms.add.attachment.other': '其他文件',
+  'ms.add.attachment.quickClear': '一键移除',
+  'ms.add.attachment.remove': '移除',
+  'ms.add.attachment.cancelAssociate': '取消关联',
+  'ms.add.attachment.saveAs': '转存',
+  'ms.add.attachment.repeatFileTip': '文件重复',
+  'ms.add.attachment.saveAsTitle': '请选择转存目录',
+  'ms.add.attachment.saveAsNamePlaceholder': '请输入文件名称',
+  'ms.add.attachment.saveAsModulePlaceholder': '请选择转存目录',
+  'ms.add.attachment.saveAsSuccess': '文件转存成功',
+  'ms.add.attachment.fileDeletedTip': '该文件已被删除，请替换',
+};

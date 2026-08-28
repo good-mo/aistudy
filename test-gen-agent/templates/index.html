@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MeterSphere · 企业级测试工作台</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+</head>
+<body>
+  <div id="app" v-cloak>
+    <!-- ═══════════ 顶部导航栏 ═══════════ -->
+    <header class="ms-header">
+      <div class="ms-header-left">
+        <div class="ms-logo">
+          <span class="ms-logo-icon">⚡</span>
+          <span class="ms-logo-text">MeterSphere</span>
+        </div>
+        <div class="ms-workspace">
+          <span class="ws-label">工作空间</span>
+          <span class="ws-name">{{ currentWorkspace }}</span>
+          <span class="ws-arrow">▾</span>
+        </div>
+        <nav class="ms-modules">
+          <div v-for="m in modules" :key="m.key"
+               class="ms-module"
+               :class="{ active: activeModule === m.key }"
+               @click="switchModule(m.key)">
+            <span class="module-icon">{{ m.icon }}</span>
+            <span>{{ m.name }}</span>
+          </div>
+        </nav>
+      </div>
+      <div class="ms-header-right">
+        <div class="conn-status" :class="connClass">
+          <span class="conn-dot"></span>{{ connText }}
+        </div>
+        <div class="header-actions">
+          <span class="ha-icon" title="帮助">❓</span>
+          <span class="ha-icon" title="通知">🔔</span>
+          <span class="ha-icon" title="设置">⚙️</span>
+        </div>
+        <div class="user-box">
+          <span class="user-avatar">👤</span>
+          <span class="user-name">测试工程师</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ═══════════ 主体布局 ═══════════ -->
+    <div class="ms-body">
+      <!-- 左侧功能菜单 -->
+      <aside class="ms-sidebar">
+        <div v-for="group in menuGroups" :key="group.label" class="menu-group">
+          <div class="menu-group-label">{{ group.label }}</div>
+          <div v-for="item in group.items" :key="item.key"
+               class="menu-item"
+               :class="{ active: currentPage === item.key }"
+               @click="navigate(item.key)">
+            <span class="menu-icon">{{ item.icon }}</span>
+            <span class="menu-text">{{ item.name }}</span>
+            <span v-if="item.badge" class="menu-badge" :class="item.badgeCls">{{ item.badge }}</span>
+          </div>
+        </div>
+        <div class="sidebar-footer">
+          <div>MeterSphere 企业版</div>
+          <div style="margin-top:3px;font-size:11px;opacity:.6">持续测试平台 v2.10</div>
+        </div>
+      </aside>
+
+      <!-- 主内容区 -->
+      <main class="ms-content">
+        <!-- ══════ 工作台 Dashboard ══════ -->
+        <section v-if="currentPage === 'dashboard'" class="page-wrap">
+          <div class="page-header">
+            <div>
+              <h2 class="page-title">👋 欢迎回来，测试工程师</h2>
+              <p class="page-desc">快速了解项目测试进度与质量概况</p>
+            </div>
+            <div class="page-actions">
+              <button class="btn btn-primary" @click="navigate('generate')">＋ 新建测试</button>
+              <button class="btn" @click="navigate('reports')">📄 生成报告</button>
+            </div>
+          </div>
+
+          <!-- 统计卡片 -->
+          <div class="stat-grid">
+            <div v-for="s in dashboardStats" :key="s.key" class="stat-card" :class="s.tone">
+              <div class="stat-label">
+                <span class="stat-icon">{{ s.icon }}</span><span>{{ s.label }}</span>
+              </div>
+              <div class="stat-value">{{ s.value }}</div>
+              <div class="stat-detail">{{ s.detail }}</div>
+            </div>
+          </div>
+
+          <div class="dash-grid">
+            <div class="panel">
+              <div class="panel-title">📚 最近用例</div>
+              <table class="ms-table compact" v-if="recentCases.length">
+                <thead><tr><th>名称</th><th>类型</th><th>状态</th><th>优先级</th></tr></thead>
+                <tbody>
+                  <tr v-for="c in recentCases" :key="c.id">
+                    <td class="ellipsis">{{ c.title }}</td>
+                    <td><span class="type-badge" :class="'t'+c.test_type">{{ getTestTypeName(c.test_type) }}</span></td>
+                    <td><span class="status-badge" :class="caseStatusCls(c.status)">{{ caseStatusName(c.status) }}</span></td>
+                    <td>{{ priorityName(c.priority) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div v-else class="empty-tip">暂无用例数据</div>
+            </div>
+            <div class="panel">
+              <div class="panel-title">🐛 最新缺陷</div>
+              <table class="ms-table compact" v-if="recentDefects.length">
+                <thead><tr><th>标题</th><th>严重程度</th><th>状态</th></tr></thead>
+                <tbody>
+                  <tr v-for="d in recentDefects" :key="d.id">
+                    <td class="ellipsis">{{ d.title }}</td>
+                    <td><span class="sev-badge" :class="'s'+d.severity">{{ sevName(d.severity) }}</span></td>
+                    <td><span class="status-badge">{{ defectStatusName(d.status) }}</span></td>
+                  </tr>
+                </tbody>
+              </table>
+              <div v-else class="empty-tip">暂无缺陷数据</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══════ 测试生成 ══════ -->
+        <section v-else-if="currentPage === 'generate'" class="page-wrap">
+          <div class="page-header">
+            <div>
+              <h2 class="page-title">⚙️ 测试用例生成</h2>
+              <p class="page-desc">粘贴源代码或扫描项目，AI 自动生成 pytest 测试用例</p>
+            </div>
+          </div>
+
+          <!-- 测试类型选择 -->
+          <div class="panel">
+            <div class="panel-title">测试类型</div>
+            <div class="type-cards">
+              <div v-for="t in testTypes" :key="t.key"
+                   class="type-card"
+                   :class="{ selected: genType === t.key }"
+                   @click="genType = t.key">
+                <div class="tc-icon">{{ t.icon }}</div>
+                <div class="tc-name">{{ t.name }}</div>
+                <div class="tc-desc">{{ t.desc }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 生成方式 -->
+          <div class="panel">
+            <div class="panel-title">生成方式</div>
+            <div class="mode-tabs">
+              <div class="mode-tab" :class="{ active: genMode==='single' }" @click="genMode='single'">📝 单文件生成</div>
+              <div class="mode-tab" :class="{ active: genMode==='project' }" @click="genMode='project'">📁 项目批量扫描</div>
+            </div>
+
+            <div v-if="genMode==='single'" class="gen-body">
+              <div class="form-row">
+                <label>文件路径</label>
+                <input v-model="genFilePath" class="ms-input" placeholder="如 utils/math.py" />
+              </div>
+              <div class="form-row">
+                <label>源代码</label>
+                <textarea v-model="genSource" class="ms-textarea" rows="6"
+                  placeholder="在此粘贴要生成测试的 Python 代码…"></textarea>
+              </div>
+              <button class="btn btn-primary" @click="startGeneration" :disabled="generating">
+                {{ generating ? '生成中…' : '🚀 开始生成' }}
+              </button>
+            </div>
+
+            <div v-else class="gen-body">
+              <div class="form-row">
+                <label>项目路径</label>
+                <input v-model="projectPath" class="ms-input" placeholder="如 /workspace/app" />
+              </div>
+              <div style="display:flex;gap:10px">
+                <button class="btn" @click="scanProject" :disabled="scanning">{{ scanning?'扫描中…':'🔍 扫描项目' }}</button>
+                <button class="btn btn-primary" @click="batchGenerate" :disabled="generating">🚀 批量生成</button>
+              </div>
+              <div v-if="scanResult" class="scan-result">
+                <div v-for="s in scanResult" :key="s.path" class="scan-row">
+                  <span>{{ s.path }}</span><span>{{ s.functions }} 个函数</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 执行进度 -->
+          <div v-if="execLogs.length || generating" class="panel">
+            <div class="panel-title">执行进度</div>
+            <div class="progress-log">
+              <div v-for="(l,i) in execLogs" :key="i" class="log-line">{{ l }}</div>
+            </div>
+          </div>
+
+          <!-- 测试结果 -->
+          <div v-if="genResult" class="panel">
+            <div class="panel-title">测试结果</div>
+            <div class="result-summary">
+              <span class="rs-pass">通过 {{ genResult.passed||0 }}</span>
+              <span class="rs-fail">失败 {{ genResult.failed||0 }}</span>
+              <span class="rs-total">共 {{ genResult.total||0 }}</span>
+              <span class="rs-cov">覆盖率 {{ genResult.coverage!=null ? genResult.coverage+'%' : '--' }}</span>
+              <span class="rs-cases">📋 结构化用例 {{ genResult.structuredCases?.length || 0 }} 条</span>
+            </div>
+
+            <!-- 结构化用例展示 -->
+            <div v-if="genResult.structuredCases?.length" class="structured-cases">
+              <div class="sc-tabs">
+                <div class="sc-tab" :class="{active: showStructured}" @click="showStructured=true">📋 结构化用例</div>
+                <div class="sc-tab" :class="{active: !showStructured}" @click="showStructured=false">💻 测试代码</div>
+              </div>
+              <div v-if="showStructured">
+                <div v-for="(sc, si) in genResult.structuredCases" :key="si" class="sc-card">
+                  <div class="sc-header">
+                    <span class="sc-index">{{ si + 1 }}</span>
+                    <span class="sc-title">{{ sc.title }}</span>
+                    <span v-if="sc.priority" class="sc-priority">{{ sc.priority }}</span>
+                    <span v-if="sc.risk_level" class="sc-risk" :class="'r-'+sc.risk_level">{{ sc.risk_level }}</span>
+                    <span v-if="sc.execution_type" class="sc-exec">{{ sc.execution_type === 'manual' ? '🖐 手工' : '🤖 自动化' }}</span>
+                  </div>
+                  <div v-if="sc.description" class="sc-desc">{{ sc.description }}</div>
+                  <div v-if="sc.preconditions?.length" class="sc-section">
+                    <div class="sc-section-label">🔧 前置条件</div>
+                    <div v-for="(p, pi) in sc.preconditions" :key="pi" class="sc-item">• {{ p }}</div>
+                  </div>
+                  <div v-if="sc.test_steps?.length" class="sc-section">
+                    <div class="sc-section-label">📝 操作步骤</div>
+                    <table class="sc-steps">
+                      <thead><tr><th style="width:30px">#</th><th>操作</th><th>数据</th><th>预期结果</th></tr></thead>
+                      <tbody>
+                        <tr v-for="(st, ti) in sc.test_steps" :key="ti">
+                          <td>{{ ti + 1 }}</td>
+                          <td>{{ st.step }}</td>
+                          <td>{{ st.data || '--' }}</td>
+                          <td>{{ st.expected }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div v-if="sc.test_data && Object.keys(sc.test_data).length" class="sc-section">
+                    <div class="sc-section-label">📊 测试数据</div>
+                    <pre class="sc-data">{{ JSON.stringify(sc.test_data, null, 2) }}</pre>
+                  </div>
+                </div>
+              </div>
+              <pre v-else class="code-block">{{ genResult.code }}</pre>
+            </div>
+            <pre v-else class="code-block" v-if="genResult.code">{{ genResult.code }}</pre>
+            <div class="btn-row">
+              <button class="btn btn-success" @click="saveGeneratedCase">💾 保存为用例</button>
+              <button class="btn" @click="navigate('cases')">查看用例库</button>
+            </div>
+          </div>
+
+          <!-- 低代码 -->
+          <div class="panel">
+            <div class="panel-title">✨ 低代码测试生成 <span class="panel-sub">— 自然语言描述测试意图</span></div>
+            <div class="form-row">
+              <textarea v-model="lowcodeDesc" class="ms-textarea" rows="3"
+                placeholder="例如：验证用户登录接口，输入正确用户名密码应返回 200 和 token"></textarea>
+            </div>
+            <button class="btn btn-primary" @click="lowcodeGenerate" :disabled="lowcoding">
+              {{ lowcoding ? '生成中…' : '🤖 生成低代码用例' }}
+            </button>
+            <pre v-if="lowcodeResult" class="code-block" style="margin-top:12px">{{ lowcodeResult }}</pre>
+          </div>
+        </section>
+
+        <!-- ══════ 用例库 ══════ -->
+        <section v-else-if="currentPage === 'cases'" class="page-wrap">
+          <div class="page-header">
+            <div>
+              <h2 class="page-title">📚 用例库</h2>
+              <p class="page-desc">管理全部测试用例，支持搜索、筛选与分类</p>
+            </div>
+            <button class="btn btn-primary" @click="openCreateCase">＋ 新建用例</button>
+          </div>
+
+          <div class="stat-grid" v-if="caseStats">
+            <div v-for="s in caseStatCards" :key="s.key" class="stat-card small" :class="s.tone">
+              <div class="stat-label"><span class="stat-icon">{{ s.icon }}</span>{{ s.label }}</div>
+              <div class="stat-value">{{ s.value }}</div>
+            </div>
+          </div>
+
+          <div class="panel filter-bar">
+            <input v-model="caseSearch" class="ms-input search" placeholder="搜索用例名称…" @input="debounce(loadCases,400)" />
+            <select v-model="caseStatusFilter" class="ms-select" @change="loadCases">
+              <option value="">全部状态</option>
+              <option v-for="s in caseStatuses" :key="s.key" :value="s.key">{{ s.name }}</option>
+            </select>
+            <select v-model="caseTypeFilter" class="ms-select" @change="loadCases">
+              <option value="">全部类型</option>
+              <option v-for="t in testTypes" :key="t.key" :value="t.key">{{ t.name }}</option>
+            </select>
+            <select v-model="casePriorityFilter" class="ms-select" @change="loadCases">
+              <option value="">全部优先级</option>
+              <option value="P0">P0</option><option value="P1">P1</option>
+              <option value="P2">P2</option><option value="P3">P3</option>
+            </select>
+          </div>
+
+          <div class="panel table-panel">
+            <table class="ms-table">
+              <thead>
+                <tr><th>名称</th><th>类型</th><th>优先级</th><th>状态</th><th>创建时间</th><th>操作</th></tr>
+              </thead>
+              <tbody>
+                <tr v-for="c in caseList" :key="c.id">
+                  <td class="ellipsis cell-name">{{ c.title }}</td>
+                  <td><span class="type-badge" :class="'t'+c.test_type">{{ getTestTypeName(c.test_type) }}</span></td>
+                  <td>{{ priorityName(c.priority) }}</td>
+                  <td><span class="status-badge" :class="caseStatusCls(c.status)">{{ caseStatusName(c.status) }}</span></td>
+                  <td>{{ fmtDate(c.created_at) }}</td>
+                  <td class="cell-actions">
+                    <button class="mini-btn" @click="viewCase(c)">查看</button>
+                    <button class="mini-btn danger" @click="deleteCase(c)">删除</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div v-if="!caseList.length" class="empty-tip">暂无用例</div>
+          </div>
+        </section>
+
+        <!-- ══════ 缺陷跟踪 ══════ -->
+        <section v-else-if="currentPage === 'defects'" class="page-wrap">
+          <div class="page-header">
+            <div>
+              <h2 class="page-title">🐛 缺陷跟踪</h2>
+              <p class="page-desc">集中管理与跟踪测试发现的缺陷</p>
+            </div>
+            <button class="btn btn-primary" @click="openCreateDefect">＋ 新建缺陷</button>
+          </div>
+
+          <div class="panel filter-bar">
+            <input v-model="defectSearch" class="ms-input search" placeholder="搜索缺陷标题…" @input="debounce(loadDefects,400)" />
+            <select v-model="defectSeverity" class="ms-select" @change="loadDefects">
+              <option value="">全部严重程度</option>
+              <option v-for="s in severities" :key="s.key" :value="s.key">{{ s.name }}</option>
+            </select>
+            <select v-model="defectStatus" class="ms-select" @change="loadDefects">
+              <option value="">全部状态</option>
+              <option v-for="s in defectStatuses" :key="s.key" :value="s.key">{{ s.name }}</option>
+            </select>
+          </div>
+
+          <div class="panel table-panel">
+            <table class="ms-table">
+              <thead>
+                <tr><th>标题</th><th>严重程度</th><th>状态</th><th>关联文件</th><th>创建时间</th><th>操作</th></tr>
+              </thead>
+              <tbody>
+                <tr v-for="d in defectList" :key="d.id">
+                  <td class="ellipsis cell-name">{{ d.title }}</td>
+                  <td><span class="sev-badge" :class="'s'+d.severity">{{ sevName(d.severity) }}</span></td>
+                  <td><span class="status-badge">{{ defectStatusName(d.status) }}</span></td>
+                  <td class="ellipsis">{{ d.file_path || '--' }}</td>
+                  <td>{{ fmtDate(d.created_at) }}</td>
+                  <td class="cell-actions">
+                    <button class="mini-btn" @click="viewDefect(d)">查看</button>
+                    <button class="mini-btn" @click="updateDefectStatus(d)">变更状态</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div v-if="!defectList.length" class="empty-tip">暂无缺陷</div>
+          </div>
+        </section>
+
+        <!-- ══════ 项目扫描 ══════ -->
+        <section v-else-if="currentPage === 'project'" class="page-wrap">
+          <div class="page-header">
+            <div><h2 class="page-title">📁 项目扫描</h2><p class="page-desc">递归扫描项目，统计文件与函数</p></div>
+          </div>
+          <div class="panel">
+            <div class="form-row">
+              <label>项目路径</label>
+              <input v-model="projectScanPath" class="ms-input" placeholder="如 /workspace" />
+            </div>
+            <button class="btn btn-primary" @click="scanProject" :disabled="scanning">{{ scanning?'扫描中…':'🔍 开始扫描' }}</button>
+            <div v-if="scanResult && scanResult.length" class="scan-result" style="margin-top:16px">
+              <div class="scan-summary">共扫描 {{ scanResult.length }} 个文件</div>
+              <div v-for="s in scanResult" :key="s.path" class="scan-row">
+                <span>{{ s.path }}</span><span>{{ s.functions }} 个函数</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══════ 报告中心 ══════ -->
+        <section v-else-if="currentPage === 'reports'" class="page-wrap">
+          <div class="page-header">
+            <div><h2 class="page-title">📊 报告中心</h2><p class="page-desc">生成与下载测试报告</p></div>
+            <div class="page-actions">
+              <select v-model="reportFormat" class="ms-select">
+                <option value="html">HTML</option>
+                <option value="junit">JUnit XML</option>
+                <option value="markdown">Markdown</option>
+              </select>
+              <button class="btn btn-primary" @click="generateReport">＋ 生成报告</button>
+            </div>
+          </div>
+          <div class="panel table-panel">
+            <table class="ms-table">
+              <thead><tr><th>文件名</th><th>格式</th><th>生成时间</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr v-for="r in reportList" :key="r.name">
+                  <td class="ellipsis cell-name">{{ r.name }}</td>
+                  <td><span class="type-badge" :class="'t-api'">{{ r.name.split('.').pop().toUpperCase() }}</span></td>
+                  <td>--</td>
+                  <td><button class="mini-btn" @click="downloadReport(r.name)">下载</button></td>
+                </tr>
+              </tbody>
+            </table>
+            <div v-if="!reportList.length" class="empty-tip">暂无报告</div>
+          </div>
+        </section>
+
+        <!-- ══════ 测试洞察 ══════ -->
+        <section v-else-if="currentPage === 'insights'" class="page-wrap">
+          <div class="page-header">
+            <div><h2 class="page-title">💡 测试洞察</h2><p class="page-desc">量化价值 · 执行追溯 · 风险预警 · 职业成长</p></div>
+          </div>
+          <div class="stat-grid">
+            <div v-for="s in insightCards" :key="s.key" class="stat-card" :class="s.tone">
+              <div class="stat-label"><span class="stat-icon">{{ s.icon }}</span>{{ s.label }}</div>
+              <div class="stat-value">{{ s.value }}</div>
+              <div class="stat-detail">{{ s.detail }}</div>
+            </div>
+          </div>
+          <div class="dash-grid" style="grid-template-columns:1fr">
+            <div class="panel">
+              <div class="panel-title">🎓 技能成长路径</div>
+              <div v-if="skillPath" class="skill-path">
+                <div v-for="(level,i) in skillPath" :key="i" class="skill-level">
+                  <span class="sl-num">{{ i+1 }}</span>
+                  <span class="sl-name">{{ level.name }}</span>
+                </div>
+              </div>
+              <div v-else class="empty-tip">暂无技能路径数据</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══════ 接口测试 ══════ -->
+        <section v-else-if="currentPage === 'apiTesting'" class="page-wrap">
+          <div class="page-header">
+            <div>
+              <h2 class="page-title">🔗 接口测试</h2>
+              <p class="page-desc">接口定义 · 用例 · 场景编排 · Mock 服务 · 调试</p>
+            </div>
+            <div class="page-actions">
+              <button class="btn btn-primary" @click="openCreateApiDef">＋ 新建接口</button>
+              <button class="btn" @click="openImportApi">📥 导入接口</button>
+            </div>
+          </div>
+
+          <!-- Tabs: 接口定义 / 接口用例 / 场景编排 / Mock / 调试 / 环境 -->
+          <div class="panel tabs-bar">
+            <div v-for="tab in apiTabs" :key="tab.key"
+                 class="tab-item" :class="{ active: apiTab === tab.key }"
+                 @click="switchApiTab(tab.key)">
+              <span>{{ tab.icon }}</span> {{ tab.name }}
+            </div>
+          </div>
+
+          <!-- 接口定义列表 -->
+          <div v-if="apiTab === 'definitions'" class="panel table-panel">
+            <div class="filter-bar">
+              <input v-model="apiDefSearch" class="ms-input search" placeholder="搜索接口名称/路径…" @input="loadApiDefs" />
+              <select v-model="apiDefMethod" class="ms-select" @change="loadApiDefs">
+                <option value="">全部方法</option>
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+                <option value="PATCH">PATCH</option>
+              </select>
+              <select v-model="apiDefProtocol" class="ms-select" @change="loadApiDefs">
+                <option value="">全部协议</option>
+                <option value="HTTP">HTTP</option>
+                <option value="TCP">TCP</option>
+                <option value="SQL">SQL</option>
+                <option value="DUBBO">DUBBO</option>
+              </select>
+            </div>
+            <table class="ms-table">
+              <thead><tr><th>名称</th><th>方法</th><th>路径</th><th>协议</th><th>标签</th><th>更新时间</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr v-for="d in apiDefList" :key="d.id">
+                  <td class="ellipsis cell-name">{{ d.name }}</td>
+                  <td><span class="method-badge" :class="'m-'+d.method.toLowerCase()">{{ d.method }}</span></td>
+                  <td class="ellipsis">{{ d.path }}</td>
+                  <td>{{ d.protocol }}</td>
+                  <td><span v-for="t in d.tags || []" :key="t" class="tag-chip">{{ t }}</span></td>
+                  <td>{{ fmtDate(d.updated_at) }}</td>
+                  <td class="cell-actions">
+                    <button class="mini-btn" @click="viewApiDef(d)">查看</button>
+                    <button class="mini-btn" @click="editApiDef(d)">编辑</button>
+                    <button class="mini-btn danger" @click="deleteApiDef(d)">删除</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div v-if="!apiDefList.length" class="empty-tip">暂无接口定义</div>
+          </div>
+
+          <!-- 接口用例列表 -->
+          <div v-else-if="apiTab === 'testCases'" class="panel table-panel">
+            <div class="filter-bar">
+              <input v-model="apiCaseSearch" class="ms-input search" placeholder="搜索用例名称/路径…" @input="loadApiTestCases" />
+            </div>
+            <table class="ms-table">
+              <thead><tr><th>名称</th><th>方法</th><th>路径</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr v-for="c in apiTestCaseList" :key="c.id">
+                  <td class="ellipsis cell-name">{{ c.name }}</td>
+                  <td><span class="method-badge" :class="'m-'+c.method.toLowerCase()">{{ c.method }}</span></td>
+                  <td class="ellipsis">{{ c.path }}</td>
+                  <td><span class="status-badge">{{ apiCaseStatusName(c.status) }}</span></td>
+                  <td>{{ fmtDate(c.created_at) }}</td>
+                  <td class="cell-actions">
+                    <button class="mini-btn" @click="viewApiCase(c)">查看</button>
+                    <button class="mini-btn" @click="editApiCase(c)">编辑</button>
+                    <button class="mini-btn" @click="debugApiCase(c)">调试</button>
+                    <button class="mini-btn danger" @click="deleteApiCase(c)">删除</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div v-if="!apiTestCaseList.length" class="empty-tip">暂无接口用例</div>
+            <button class="btn btn-primary" style="margin-top:12px" @click="openCreateApiCase">＋ 新建接口用例</button>
+          </div>
+
+          <!-- 场景编排 -->
+          <div v-else-if="apiTab === 'scenarios'" class="panel table-panel">
+            <table class="ms-table">
+              <thead><tr><th>名称</th><th>描述</th><th>步骤数</th><th>状态</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr v-for="s in scenarioList" :key="s.id">
+                  <td class="ellipsis cell-name">{{ s.name }}</td>
+                  <td class="ellipsis">{{ s.description }}</td>
+                  <td>{{ (s.steps || []).length }}</td>
+                  <td><span class="status-badge">{{ s.status }}</span></td>
+                  <td class="cell-actions">
+                    <button class="mini-btn" @click="viewScenario(s)">详情</button>
+                    <button class="mini-btn" @click="executeScenario(s)">执行</button>
+                    <button class="mini-btn danger" @click="deleteScenario(s)">删除</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div v-if="!scenarioList.length" class="empty-tip">暂无场景</div>
+            <button class="btn btn-primary" style="margin-top:12px" @click="openCreateScenario">＋ 新建场景</button>
+          </div>
+
+          <!-- Mock 服务 -->
+          <div v-else-if="apiTab === 'mock'" class="panel table-panel">
+            <table class="ms-table">
+              <thead><tr><th>名称</th><th>方法</th><th>路径</th><th>响应码</th><th>延迟</th><th>状态</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr v-for="m in mockServiceList" :key="m.id">
+                  <td class="ellipsis cell-name">{{ m.name }}</td>
+                  <td><span class="method-badge" :class="'m-'+m.method.toLowerCase()">{{ m.method }}</span></td>
+                  <td class="ellipsis">{{ m.path }}</td>
+                  <td>{{ m.response_code }}</td>
+                  <td>{{ m.delay_ms }}ms</td>
+                  <td><span class="status-badge" :class="m.enabled ? 'st-ok' : 'st-muted'">{{ m.enabled ? '启用' : '停用' }}</span></td>
+                  <td class="cell-actions">
+                    <button class="mini-btn" @click="editMockService(m)">编辑</button>
+                    <button class="mini-btn danger" @click="deleteMockService(m)">删除</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div v-if="!mockServiceList.length" class="empty-tip">暂无 Mock 服务</div>
+            <button class="btn btn-primary" style="margin-top:12px" @click="openCreateMock">＋ 新建 Mock 服务</button>
+          </div>
+
+          <!-- 接口调试 -->
+          <div v-else-if="apiTab === 'debug'" class="panel">
+            <div class="panel-title">接口调试</div>
+            <div class="debug-row">
+              <select v-model="debugMethod" class="ms-select" style="width:100px">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+                <option value="PATCH">PATCH</option>
+              </select>
+              <input v-model="debugUrl" class="ms-input" placeholder="请求 URL，如 https://api.example.com/users" style="flex:1" />
+              <button class="btn btn-primary" @click="runDebug" :disabled="debugging">
+                {{ debugging ? '调试中…' : '🚀 发送' }}
+              </button>
+            </div>
+            <div class="form-row" style="margin-top:12px">
+              <label>请求头 (JSON)</label>
+              <textarea v-model="debugHeaders" class="ms-textarea" rows="2" placeholder='{"Content-Type": "application/json"}'></textarea>
+            </div>
+            <div class="form-row">
+              <label>请求参数 (JSON)</label>
+              <textarea v-model="debugParams" class="ms-textarea" rows="2" placeholder='{"page": 1, "size": 10}'></textarea>
+            </div>
+            <div class="form-row">
+              <label>请求体</label>
+              <textarea v-model="debugBody" class="ms-textarea" rows="3" placeholder='{"name": "test"}'></textarea>
+            </div>
+            <div v-if="debugResult" class="debug-result">
+              <div class="result-summary">
+                <span class="rs-code" :class="debugResult.response_code < 400 ? 'rs-pass' : 'rs-fail'">
+                  状态码: {{ debugResult.response_code || '--' }}
+                </span>
+                <span class="rs-total">耗时: {{ debugResult.duration_ms }}ms</span>
+                <span v-if="debugResult.success" class="rs-pass">✅ 成功</span>
+                <span v-else class="rs-fail">❌ 失败</span>
+              </div>
+              <div v-if="debugResult.error" class="err-tip">{{ debugResult.error }}</div>
+              <pre class="code-block" v-if="debugResult.response_data">{{ debugResult.response_data }}</pre>
+            </div>
+          </div>
+
+          <!-- 环境管理 -->
+          <div v-else-if="apiTab === 'environments'" class="panel table-panel">
+            <table class="ms-table">
+              <thead><tr><th>名称</th><th>Base URL</th><th>描述</th><th>默认</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr v-for="e in envList" :key="e.id">
+                  <td class="ellipsis cell-name">{{ e.name }}</td>
+                  <td class="ellipsis">{{ e.base_url || '--' }}</td>
+                  <td class="ellipsis">{{ e.description }}</td>
+                  <td>{{ e.is_default ? '✅' : '--' }}</td>
+                  <td class="cell-actions">
+                    <button class="mini-btn" @click="editEnv(e)">编辑</button>
+                    <button class="mini-btn danger" @click="deleteEnv(e)">删除</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div v-if="!envList.length" class="empty-tip">暂无环境</div>
+            <button class="btn btn-primary" style="margin-top:12px" @click="openCreateEnv">＋ 新建环境</button>
+          </div>
+        </section>
+
+        <!-- ══════ 用例高级管理 ══════ -->
+        <section v-else-if="currentPage === 'caseManagement'" class="page-wrap">
+          <div class="page-header">
+            <div>
+              <h2 class="page-title">📋 用例高级管理</h2>
+              <p class="page-desc">脑图 · 导入导出 · 评审 · 依赖 · 回收站 · 版本 · 变更 · 需求关联</p>
+            </div>
+          </div>
+
+          <div class="panel tabs-bar">
+            <div v-for="tab in caseMgmtTabs" :key="tab.key"
+                 class="tab-item" :class="{ active: caseMgmtTab === tab.key }"
+                 @click="switchCaseMgmtTab(tab.key)">
+              <span>{{ tab.icon }}</span> {{ tab.name }}
+            </div>
+          </div>
+
+          <!-- 脑图视图 -->
+          <div v-if="caseMgmtTab === 'mindmap'" class="panel">
+            <div class="panel-title">用例脑图</div>
+            <div v-if="mindmapData" class="mindmap">
+              <div v-for="(typeNode, typeKey) in mindmapData" :key="typeKey" class="mm-type">
+                <div class="mm-type-label">{{ getTestTypeName(typeKey) }}</div>
+                <div v-for="(prioNodes, prioKey) in typeNode" :key="prioKey" class="mm-prio">
+                  <div class="mm-prio-label">{{ prioKey }}</div>
+                  <div v-for="caseItem in prioNodes" :key="caseItem.id" class="mm-case">
+                    {{ caseItem.title }}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div v-else class="empty-tip">暂无脑图数据</div>
+          </div>
+
+          <!-- 导入导出 -->
+          <div v-else-if="caseMgmtTab === 'importExport'" class="panel">
+            <div class="panel-title">导入 / 导出</div>
+            <div class="form-row">
+              <label>导出格式</label>
+              <select v-model="exportFormat" class="ms-select">
+                <option value="excel">Excel (CSV)</option>
+                <option value="mindmap">XMind (JSON)</option>
+              </select>
+              <button class="btn btn-primary" @click="exportCases">📥 导出用例</button>
+            </div>
+            <div class="form-row">
+              <label>导入格式</label>
+              <select v-model="importFormat" class="ms-select">
+                <option value="excel">Excel (CSV)</option>
+                <option value="mindmap">XMind (JSON)</option>
+              </select>
+              <textarea v-model="importData" class="ms-textarea" rows="4" placeholder="粘贴要导入的数据…"></textarea>
+              <button class="btn btn-primary" @click="importCases">📤 导入用例</button>
+            </div>
+          </div>
+
+          <!-- 评审 -->
+          <div v-else-if="caseMgmtTab === 'review'" class="panel table-panel">
+            <div class="panel-title">用例评审</div>
+            <table class="ms-table">
+              <thead><tr><th>用例名称</th><th>状态</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr v-for="c in caseList" :key="c.id">
+                  <td class="ellipsis">{{ c.title }}</td>
+                  <td><span class="status-badge" :class="caseStatusCls(c.status)">{{ caseStatusName(c.status) }}</span></td>
+                  <td class="cell-actions">
+                    <button v-if="c.status === 'review'" class="mini-btn success" @click="approveCaseReview(c)">通过</button>
+                    <button v-if="c.status === 'review'" class="mini-btn danger" @click="rejectCaseReview(c)">驳回</button>
+                    <button v-if="c.status === 'draft'" class="mini-btn" @click="submitCaseReview(c)">提交评审</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div v-if="!caseList.length" class="empty-tip">暂无用例</div>
+          </div>
+
+          <!-- 依赖关系 -->
+          <div v-else-if="caseMgmtTab === 'dependencies'" class="panel table-panel">
+            <div class="panel-title">用例依赖关系</div>
+            <table class="ms-table">
+              <thead><tr><th>用例</th><th>依赖用例</th><th>类型</th><th>描述</th></tr></thead>
+              <tbody>
+                <tr v-for="(d, i) in dependencyList" :key="i">
+                  <td class="ellipsis">{{ d.case_title }}</td>
+                  <td class="ellipsis">{{ d.depends_on_title }}</td>
+                  <td>{{ d.dep_type === 'before' ? '前置' : '后置' }}</td>
+                  <td class="ellipsis">{{ d.description }}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div v-if="!dependencyList.length" class="empty-tip">暂无依赖关系</div>
+          </div>
+
+          <!-- 回收站 -->
+          <div v-else-if="caseMgmtTab === 'trash'" class="panel table-panel">
+            <div class="panel-title">回收站</div>
+            <table class="ms-table">
+              <thead><tr><th>名称</th><th>删除时间</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr v-for="c in trashList" :key="c.id">
+                  <td class="ellipsis">{{ c.title }}</td>
+                  <td>{{ fmtDate(c.deleted_at) }}</td>
+                  <td class="cell-actions">
+                    <button class="mini-btn success" @click="restoreCase(c)">恢复</button>
+                    <button class="mini-btn danger" @click="purgeCase(c)">彻底删除</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div v-if="!trashList.length" class="empty-tip">回收站为空</div>
+          </div>
+
+          <!-- 版本管理 -->
+          <div v-else-if="caseMgmtTab === 'versions'" class="panel table-panel">
+            <div class="panel-title">版本管理</div>
+            <table class="ms-table">
+              <thead><tr><th>用例</th><th>版本号</th><th>创建时间</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr v-for="v in versionList" :key="v.id">
+                  <td class="ellipsis">{{ v.case_title }}</td>
+                  <td>v{{ v.version }}</td>
+                  <td>{{ fmtDate(v.created_at) }}</td>
+                  <td><button class="mini-btn" @click="rollbackCaseVersion(v)">回滚</button></td>
+                </tr>
+              </tbody>
+            </table>
+            <div v-if="!versionList.length" class="empty-tip">暂无版本记录</div>
+          </div>
+
+          <!-- 变更记录 -->
+          <div v-else-if="caseMgmtTab === 'changes'" class="panel table-panel">
+            <div class="panel-title">变更记录</div>
+            <table class="ms-table">
+              <thead><tr><th>用例</th><th>操作</th><th>时间</th></tr></thead>
+              <tbody>
+                <tr v-for="c in changeLogList" :key="c.id">
+                  <td class="ellipsis">{{ c.case_title }}</td>
+                  <td>{{ changeActionName(c.action) }}</td>
+                  <td>{{ fmtDate(c.created_at) }}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div v-if="!changeLogList.length" class="empty-tip">暂无变更记录</div>
+          </div>
+
+          <!-- 需求关联 -->
+          <div v-else-if="caseMgmtTab === 'requirements'" class="panel table-panel">
+            <div class="panel-title">需求关联</div>
+            <table class="ms-table">
+              <thead><tr><th>用例</th><th>需求来源</th><th>需求ID</th><th>需求标题</th></tr></thead>
+              <tbody>
+                <tr v-for="r in requirementList" :key="r.id">
+                  <td class="ellipsis">{{ r.case_title }}</td>
+                  <td>{{ r.requirement_type }}</td>
+                  <td>{{ r.requirement_id }}</td>
+                  <td class="ellipsis">{{ r.requirement_title }}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div v-if="!requirementList.length" class="empty-tip">暂无需求关联</div>
+          </div>
+        </section>
+
+        <!-- ══════ 项目管理 ══════ -->
+        <section v-else-if="currentPage === 'projectMgmt'" class="page-wrap">
+          <div class="page-header">
+            <div>
+              <h2 class="page-title">📦 项目管理</h2>
+              <p class="page-desc">创建与管理测试项目</p>
+            </div>
+            <button class="btn btn-primary" @click="openCreateProject">＋ 新建项目</button>
+          </div>
+          <div class="panel table-panel">
+            <table class="ms-table">
+              <thead><tr><th>名称</th><th>语言</th><th>描述</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr v-for="p in projectList" :key="p.id">
+                  <td class="ellipsis cell-name">{{ p.name }}</td>
+                  <td>{{ p.language }}</td>
+                  <td class="ellipsis">{{ p.description }}</td>
+                  <td><span class="status-badge" :class="p.status === 'active' ? 'st-ok' : 'st-muted'">{{ p.status === 'active' ? '活跃' : '归档' }}</span></td>
+                  <td>{{ fmtDate(p.created_at) }}</td>
+                  <td class="cell-actions">
+                    <button class="mini-btn" @click="viewProject(p)">查看</button>
+                    <button class="mini-btn danger" @click="deleteProject(p)">删除</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div v-if="!projectList.length" class="empty-tip">暂无项目</div>
+          </div>
+        </section>
+
+        <!-- ══════ 任务队列 ══════ -->        <!-- ══════ 任务队列 ══════ -->
+        <section v-else-if="currentPage === 'tasks'" class="page-wrap">
+          <div class="page-header">
+            <div><h2 class="page-title">⚡ 任务队列</h2><p class="page-desc">后台异步任务执行状态</p></div>
+          </div>
+          <div class="panel table-panel">
+            <table class="ms-table">
+              <thead><tr><th>任务ID</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr v-for="t in taskList" :key="t.id">
+                  <td class="ellipsis">{{ t.id }}</td>
+                  <td><span class="task-badge" :class="taskCls(t.status)">{{ taskName(t.status) }}</span></td>
+                  <td>{{ fmtDate(t.created_at) }}</td>
+                  <td><button class="mini-btn" @click="pollTask(t.id)">查看</button></td>
+                </tr>
+              </tbody>
+            </table>
+            <div v-if="!taskList.length" class="empty-tip">暂无任务</div>
+          </div>
+        </section>
+
+        <!-- ══════ 接口测试 · 接口定义 ══════ -->
+
+      </main>
+    </div>
+
+    <!-- ═══════════ 弹窗 ═══════════ -->
+    <div v-if="modal" class="modal-mask" @click.self="closeModal">
+      <div class="modal">
+        <div class="modal-header">
+          <span>{{ modal.title }}</span>
+          <span class="modal-close" @click="closeModal">✕</span>
+        </div>
+        <div class="modal-body">
+          <div v-if="modal.type==='viewCase' && currentViewCase">
+            <div class="form-row"><label>名称</label><div class="view-val">{{ currentViewCase.title }}</div></div>
+            <div class="form-row"><label>类型</label><div class="view-val">{{ getTestTypeName(currentViewCase.test_type) }}</div></div>
+            <div class="form-row"><label>优先级</label><div class="view-val">{{ priorityName(currentViewCase.priority) }}</div></div>
+            <div class="form-row"><label>状态</label><div class="view-val">{{ caseStatusName(currentViewCase.status) }}</div></div>
+            <div class="form-row"><label>测试代码</label><pre class="code-block">{{ currentViewCase.test_code }}</pre></div>
+            <div v-if="currentViewCase.structured_cases?.length" class="sc-card" style="margin-top:12px">
+              <div class="sc-section-label">📋 结构化用例 ({{ currentViewCase.structured_cases.length }} 条)</div>
+              <div v-for="(sc, si) in currentViewCase.structured_cases" :key="si" style="margin-top:8px;padding:10px;border:1px solid #eee;border-radius:6px">
+                <div class="sc-header"><span class="sc-index">{{ si+1 }}</span><span class="sc-title">{{ sc.title }}</span></div>
+                <div v-if="sc.preconditions?.length" style="margin-top:6px"><strong>前置条件:</strong> {{ sc.preconditions.join('; ') }}</div>
+                <div v-if="sc.test_steps?.length" style="margin-top:6px">
+                  <strong>步骤:</strong>
+                  <div v-for="(st, ti) in sc.test_steps" :key="ti" style="margin-left:12px">
+                    {{ ti+1 }}. {{ st.step }} <span v-if="st.data">(数据: {{ st.data }})</span> → <em>{{ st.expected }}</em>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-else-if="modal.type==='createCase'">
+            <div class="form-row"><label>名称 <span class="req">*</span></label><input v-model="newCase.title" class="ms-input" /></div>
+            <div class="form-row"><label>类型</label>
+              <select v-model="newCase.test_type" class="ms-select">
+                <option v-for="t in testTypes" :key="t.key" :value="t.key">{{ t.name }}</option>
+              </select>
+            </div>
+            <div class="form-row"><label>优先级</label>
+              <select v-model="newCase.priority" class="ms-select">
+                <option value="P0">P0</option><option value="P1">P1</option>
+                <option value="P2">P2</option><option value="P3">P3</option>
+              </select>
+            </div>
+            <div class="form-row"><label>测试代码</label><textarea v-model="newCase.test_code" class="ms-textarea" rows="6"></textarea></div>
+          </div>
+          <div v-else-if="modal.type==='viewDefect' && currentViewDefect">
+            <div class="form-row"><label>标题</label><div class="view-val">{{ currentViewDefect.title }}</div></div>
+            <div class="form-row"><label>严重程度</label><div class="view-val">{{ sevName(currentViewDefect.severity) }}</div></div>
+            <div class="form-row"><label>状态</label><div class="view-val">{{ defectStatusName(currentViewDefect.status) }}</div></div>
+            <div class="form-row"><label>描述</label><pre class="code-block">{{ currentViewDefect.description }}</pre></div>
+          </div>
+          <div v-else-if="modal.type==='createDefect'">
+            <div class="form-row"><label>标题 <span class="req">*</span></label><input v-model="newDefect.title" class="ms-input" /></div>
+            <div class="form-row"><label>严重程度</label>
+              <select v-model="newDefect.severity" class="ms-select">
+                <option v-for="s in severities" :key="s.key" :value="s.key">{{ s.name }}</option>
+              </select>
+            </div>
+            <div class="form-row"><label>关联文件</label><input v-model="newDefect.file_path" class="ms-input" /></div>
+            <div class="form-row"><label>描述</label><textarea v-model="newDefect.description" class="ms-textarea" rows="4"></textarea></div>
+          </div>
+          <div v-else-if="modal.type==='createApiDef'">
+            <div class="form-row"><label>名称 <span class="req">*</span></label><input v-model="newApiDef.name" class="ms-input" /></div>
+            <div class="form-row"><label>方法</label>
+              <select v-model="newApiDef.method" class="ms-select">
+                <option value="GET">GET</option><option value="POST">POST</option>
+                <option value="PUT">PUT</option><option value="DELETE">DELETE</option>
+                <option value="PATCH">PATCH</option>
+              </select>
+            </div>
+            <div class="form-row"><label>路径 <span class="req">*</span></label><input v-model="newApiDef.path" class="ms-input" placeholder="/api/users" /></div>
+            <div class="form-row"><label>协议</label>
+              <select v-model="newApiDef.protocol" class="ms-select">
+                <option value="HTTP">HTTP</option><option value="TCP">TCP</option>
+                <option value="SQL">SQL</option><option value="DUBBO">DUBBO</option>
+              </select>
+            </div>
+            <div class="form-row"><label>描述</label><textarea v-model="newApiDef.description" class="ms-textarea" rows="2"></textarea></div>
+            <div class="form-row"><label>请求头 (JSON)</label><textarea v-model="newApiDef.request_headers" class="ms-textarea" rows="2" placeholder='{"Content-Type": "application/json"}'></textarea></div>
+            <div class="form-row"><label>请求参数 (JSON)</label><textarea v-model="newApiDef.request_params" class="ms-textarea" rows="2" placeholder='{"key": "value"}'></textarea></div>
+            <div class="form-row"><label>请求体</label><textarea v-model="newApiDef.request_body" class="ms-textarea" rows="3"></textarea></div>
+          </div>
+          <div v-else-if="modal.type==='createApiCase'">
+            <div class="form-row"><label>名称 <span class="req">*</span></label><input v-model="newApiCase.name" class="ms-input" /></div>
+            <div class="form-row"><label>方法</label>
+              <select v-model="newApiCase.method" class="ms-select">
+                <option value="GET">GET</option><option value="POST">POST</option>
+                <option value="PUT">PUT</option><option value="DELETE">DELETE</option>
+                <option value="PATCH">PATCH</option>
+              </select>
+            </div>
+            <div class="form-row"><label>路径</label><input v-model="newApiCase.path" class="ms-input" placeholder="/api/users" /></div>
+            <div class="form-row"><label>关联接口定义</label>
+              <select v-model="newApiCase.definition_id" class="ms-select">
+                <option value="">-- 不关联 --</option>
+                <option v-for="d in apiDefList" :key="d.id" :value="d.id">{{ d.name }}</option>
+              </select>
+            </div>
+            <div class="form-row"><label>请求头 (JSON)</label><textarea v-model="newApiCase.request_headers" class="ms-textarea" rows="2"></textarea></div>
+            <div class="form-row"><label>请求参数 (JSON)</label><textarea v-model="newApiCase.request_params" class="ms-textarea" rows="2"></textarea></div>
+            <div class="form-row"><label>请求体</label><textarea v-model="newApiCase.request_body" class="ms-textarea" rows="3"></textarea></div>
+            <div class="form-row"><label>断言 (JSON数组)</label><textarea v-model="newApiCase.assertions" class="ms-textarea" rows="2" placeholder='[{"type":"status_code","value":"200"}]'></textarea></div>
+            <div class="form-row"><label>前置脚本 (JSON数组)</label><textarea v-model="newApiCase.pre_scripts" class="ms-textarea" rows="2"></textarea></div>
+            <div class="form-row"><label>后置脚本 (JSON数组)</label><textarea v-model="newApiCase.post_scripts" class="ms-textarea" rows="2"></textarea></div>
+          </div>
+          <div v-else-if="modal.type==='createScenario'">
+            <div class="form-row"><label>名称 <span class="req">*</span></label><input v-model="newScenario.name" class="ms-input" /></div>
+            <div class="form-row"><label>描述</label><textarea v-model="newScenario.description" class="ms-textarea" rows="2"></textarea></div>
+            <div class="form-row"><label>步骤 (JSON数组)</label>
+              <textarea v-model="newScenario.steps" class="ms-textarea" rows="4" placeholder='[{"case_id":"xxx","order":1,"enabled":true}]'></textarea>
+            </div>
+            <div class="form-row"><label>环境</label>
+              <select v-model="newScenario.environment_id" class="ms-select">
+                <option value="">-- 默认 --</option>
+                <option v-for="e in envList" :key="e.id" :value="e.id">{{ e.name }}</option>
+              </select>
+            </div>
+          </div>
+          <div v-else-if="modal.type==='createMock'">
+            <div class="form-row"><label>名称 <span class="req">*</span></label><input v-model="newMock.name" class="ms-input" /></div>
+            <div class="form-row"><label>方法</label>
+              <select v-model="newMock.method" class="ms-select">
+                <option value="GET">GET</option><option value="POST">POST</option>
+                <option value="PUT">PUT</option><option value="DELETE">DELETE</option>
+              </select>
+            </div>
+            <div class="form-row"><label>路径 <span class="req">*</span></label><input v-model="newMock.path" class="ms-input" placeholder="/api/mock" /></div>
+            <div class="form-row"><label>响应码</label><input v-model="newMock.response_code" class="ms-input" type="number" /></div>
+            <div class="form-row"><label>响应头 (JSON)</label><textarea v-model="newMock.response_headers" class="ms-textarea" rows="2"></textarea></div>
+            <div class="form-row"><label>响应体</label><textarea v-model="newMock.response_body" class="ms-textarea" rows="3"></textarea></div>
+            <div class="form-row"><label>延迟 (ms)</label><input v-model="newMock.delay_ms" class="ms-input" type="number" /></div>
+          </div>
+          <div v-else-if="modal.type==='createEnv'">
+            <div class="form-row"><label>名称 <span class="req">*</span></label><input v-model="newEnv.name" class="ms-input" /></div>
+            <div class="form-row"><label>Base URL</label><input v-model="newEnv.base_url" class="ms-input" placeholder="https://api.example.com" /></div>
+            <div class="form-row"><label>描述</label><textarea v-model="newEnv.description" class="ms-textarea" rows="2"></textarea></div>
+            <div class="form-row"><label>请求头 (JSON)</label><textarea v-model="newEnv.headers" class="ms-textarea" rows="2"></textarea></div>
+            <div class="form-row"><label>变量 (JSON)</label><textarea v-model="newEnv.variables" class="ms-textarea" rows="2"></textarea></div>
+          </div>
+          <div v-else-if="modal.type==='createProject'">
+            <div class="form-row"><label>名称 <span class="req">*</span></label><input v-model="newProject.name" class="ms-input" /></div>
+            <div class="form-row"><label>语言</label>
+              <select v-model="newProject.language" class="ms-select">
+                <option value="python">Python</option><option value="java">Java</option>
+                <option value="javascript">JavaScript</option><option value="go">Go</option>
+              </select>
+            </div>
+            <div class="form-row"><label>描述</label><textarea v-model="newProject.description" class="ms-textarea" rows="2"></textarea></div>
+            <div class="form-row"><label>仓库地址</label><input v-model="newProject.repo_url" class="ms-input" placeholder="https://github.com/xxx/repo" /></div>
+            <div class="form-row"><label>路径</label><input v-model="newProject.path" class="ms-input" placeholder="/workspace/project" /></div>
+          </div>
+          <div v-else-if="modal.type==='viewApiDef' && currentViewApiDef">
+            <div class="form-row"><label>名称</label><div class="view-val">{{ currentViewApiDef.name }}</div></div>
+            <div class="form-row"><label>方法</label><div class="view-val">{{ currentViewApiDef.method }}</div></div>
+            <div class="form-row"><label>路径</label><div class="view-val">{{ currentViewApiDef.path }}</div></div>
+            <div class="form-row"><label>协议</label><div class="view-val">{{ currentViewApiDef.protocol }}</div></div>
+            <div class="form-row"><label>描述</label><pre class="code-block">{{ currentViewApiDef.description }}</pre></div>
+            <div class="form-row"><label>请求头</label><pre class="code-block">{{ JSON.stringify(currentViewApiDef.request_headers || {}, null, 2) }}</pre></div>
+            <div class="form-row"><label>请求参数</label><pre class="code-block">{{ JSON.stringify(currentViewApiDef.request_params || {}, null, 2) }}</pre></div>
+            <div class="form-row"><label>请求体</label><pre class="code-block">{{ currentViewApiDef.request_body }}</pre></div>
+          </div>
+          <div v-else-if="modal.type==='viewApiCase' && currentViewApiCase">
+            <div class="form-row"><label>名称</label><div class="view-val">{{ currentViewApiCase.name }}</div></div>
+            <div class="form-row"><label>方法</label><div class="view-val">{{ currentViewApiCase.method }}</div></div>
+            <div class="form-row"><label>路径</label><div class="view-val">{{ currentViewApiCase.path }}</div></div>
+            <div class="form-row"><label>请求体</label><pre class="code-block">{{ currentViewApiCase.request_body }}</pre></div>
+            <div class="form-row"><label>断言</label><pre class="code-block">{{ JSON.stringify(currentViewApiCase.assertions || [], null, 2) }}</pre></div>
+          </div>
+          <div v-else-if="modal.type==='viewScenario' && currentViewScenario">
+            <div class="form-row"><label>名称</label><div class="view-val">{{ currentViewScenario.name }}</div></div>
+            <div class="form-row"><label>描述</label><div class="view-val">{{ currentViewScenario.description }}</div></div>
+            <div class="form-row"><label>步骤</label>
+              <div v-for="(s, i) in currentViewScenario.steps || []" :key="i" class="view-val" style="padding:4px 0">
+                {{ i+1 }}. 用例: {{ getApiCaseName(s.case_id) }} {{ s.enabled === false ? '(停用)' : '' }}
+              </div>
+            </div>
+          </div>
+          <div v-else-if="modal.type==='importApi'">
+            <div class="form-row"><label>导入格式</label>
+              <select v-model="importApiFormat" class="ms-select">
+                <option value="postman">Postman Collection</option>
+                <option value="swagger">Swagger/OpenAPI</option>
+              </select>
+            </div>
+            <div class="form-row"><label>JSON 数据 <span class="req">*</span></label>
+              <textarea v-model="importApiData" class="ms-textarea" rows="8" placeholder="粘贴 Postman Collection 或 Swagger JSON 数据"></textarea>
+            </div>
+          </div>
+          <div v-else-if="modal.type==='changeDefect' && currentViewDefect">
+            <div class="form-row"><label>变更状态</label>
+              <select v-model="newDefectStatus" class="ms-select">
+                <option v-for="s in defectStatuses" :key="s.key" :value="s.key">{{ s.name }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" @click="closeModal">取消</button>
+          <button v-if="['createCase','createDefect','changeDefect','createApiDef','createApiCase','createScenario','createMock','createEnv','createProject','importApi'].includes(modal.type)" class="btn btn-primary" @click="submitModal">确定</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div v-if="toast.show" class="toast" :class="'toast-'+toast.type">{{ toast.msg }}</div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

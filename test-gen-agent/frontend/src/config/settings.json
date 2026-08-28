@@ -1,0 +1,21 @@
+{
+  "theme": "light",
+  "colorWeak": false,
+  "navbar": true,
+  "menu": true,
+  "hideMenu": false,
+  "menuCollapse": false,
+  "footer": false,
+  "themeColor": "#5736E9",
+  "menuWidth": 200,
+  "collapsedWidth": 72,
+  "globalSettings": false,
+  "device": "desktop",
+  "tabBar": false,
+  "serverMenu": [],
+  "pageSize": 10,
+  "showPageSize": false,
+  "showTotal": true,
+  "showJumper": true,
+  "hideOnSinglePage": false
+}

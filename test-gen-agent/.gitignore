@@ -1,0 +1,22 @@
+.env
+
+*.pyc
+
+__pycache__/
+
+logs/
+
+*.db-shm
+*.db-wal
+
+*.db-journal
+*.db-shm
+*.db-wal
+
+# 运行时生成的数据库与目录
+
+
+
+# 运行时生成的数据库
+
+# 运行时生成的 SQLite 数据库（统一忽略）

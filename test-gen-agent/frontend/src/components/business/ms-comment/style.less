@@ -1,0 +1,62 @@
+/* 评论组件的样式 */
+.ms-comment-child-container {
+  padding: 16px;
+  border: 0.5px solid var(--color-text-input-border); /* 设置近似 0.5px 的边框 */
+  border-radius: 4px;
+}
+.markdown-body {
+  font-size: 14px !important;
+  line-height: 22px !important;
+  color: var(--color-text-2) !important;
+  background: var(--color-text-fff) !important;
+  word-break: break-all !important;
+  ul {
+    list-style: disc !important;
+    li[data-type='taskItem'] {
+      height: 24px;
+      line-height: 24px;
+      list-style: none !important;
+      @apply my-6 flex items-center;
+      label {
+        margin-right: 4px;
+        @apply flex items-center;
+      }
+      > div {
+        @apply flex items-center;
+        > p {
+          margin-bottom: 0;
+        }
+      }
+    }
+  }
+  ol {
+    list-style: decimal !important;
+  }
+  table {
+    @apply overflow-x-auto;
+    .ms-scroll-bar();
+    tr {
+      background: var(--color-text-fff) !important;
+      th,
+      td {
+        padding: 8px;
+        min-width: 80px;
+      }
+      p {
+        margin: 0 !important;
+        text-align: left;
+      }
+    }
+  }
+}
+.ms-comment-list {
+  @apply h-full;
+  .ms-comment-list-item {
+    @apply flex;
+
+    gap: 8px;
+    &:not(:last-child) {
+      margin-bottom: 16px;
+    }
+  }
+}

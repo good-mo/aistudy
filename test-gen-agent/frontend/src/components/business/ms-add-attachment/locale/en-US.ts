@@ -1,0 +1,16 @@
+export default {
+  'ms.add.attachment.localUpload': 'Local upload',
+  'ms.add.attachment.associateFile': 'Associate file',
+  'ms.add.attachment.alreadyDelete': 'Deleted files',
+  'ms.add.attachment.other': 'Other files',
+  'ms.add.attachment.quickClear': 'Clear',
+  'ms.add.attachment.remove': 'Remove',
+  'ms.add.attachment.cancelAssociate': 'Disassociate',
+  'ms.add.attachment.saveAs': 'Save',
+  'ms.add.attachment.repeatFileTip': 'File already exists.',
+  'ms.add.attachment.saveAsTitle': 'Please select the transfer directory',
+  'ms.add.attachment.saveAsNamePlaceholder': 'Please enter file name',
+  'ms.add.attachment.saveAsModulePlaceholder': 'Please select the transfer directory',
+  'ms.add.attachment.saveAsSuccess': 'File transfer successful',
+  'ms.add.attachment.fileDeletedTip': 'The file has been deleted, please replace it',
+};
